@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Virtual package for libEGL
+# libegl
 #
 ################################################################################
 
@@ -12,6 +12,10 @@ endif
 
 ifeq ($(BR2_PACKAGE_TI_GFX),y)
 LIBEGL_DEPENDENCIES += ti-gfx
+endif
+
+ifeq ($(BR2_PACKAGE_SUNXI_MALI),y)
+LIBEGL_DEPENDENCIES += sunxi-mali
 endif
 
 ifeq ($(LIBEGL_DEPENDENCIES),)

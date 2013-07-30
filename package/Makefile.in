@@ -21,7 +21,14 @@ MAKE1:=$(HOSTMAKE) -j1
 MAKE:=$(HOSTMAKE) -j$(PARALLEL_JOBS)
 
 # Compute GNU_TARGET_NAME
-GNU_TARGET_NAME=$(ARCH)-buildroot-linux-$(LIBC)$(ABI)
+GNU_TARGET_NAME=$(ARCH)-buildroot-$(TARGET_OS)-$(LIBC)$(ABI)
+
+# Blackfin FLAT needs uclinux
+ifeq ($(BR2_bfin)$(BR2_BINFMT_FLAT),yy)
+TARGET_OS=uclinux
+else
+TARGET_OS=linux
+endif
 
 ifeq ($(BR2_TOOLCHAIN_USES_UCLIBC),y)
 LIBC=uclibc
@@ -122,6 +129,11 @@ ifeq ($(BR2_BINFMT_FLAT_SEP_DATA),y)
 TARGET_LDFLAGS += -msep-data
 TARGET_CFLAGS += -msep-data
 TARGET_CXXFLAGS += -msep-data
+endif
+
+ifeq ($(BR2_TOOLCHAIN_BUILDROOT_USE_SSP),y)
+TARGET_CFLAGS += -fstack-protector-all
+TARGET_CXXFLAGS += -fstack-protector-all
 endif
 
 ifeq ($(BR2_TOOLCHAIN_BUILDROOT)$(BR2_TOOLCHAIN_CTNG),y)

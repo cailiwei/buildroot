@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Virtual package for libGLES
+# libgles
 #
 ################################################################################
 
@@ -12,6 +12,10 @@ endif
 
 ifeq ($(BR2_PACKAGE_TI_GFX),y)
 LIBGLES_DEPENDENCIES += ti-gfx
+endif
+
+ifeq ($(BR2_PACKAGE_SUNXI_MALI),y)
+LIBGLES_DEPENDENCIES += sunxi-mali
 endif
 
 ifeq ($(LIBGLES_DEPENDENCIES),)

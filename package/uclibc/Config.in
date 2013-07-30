@@ -104,6 +104,7 @@ choice
 
 	config BR2_PTHREADS
 		bool "linuxthreads"
+		depends on !BR2_bfin
 		depends on !BR2_xtensa
 	        select BR2_TOOLCHAIN_HAS_THREADS
 
@@ -114,10 +115,11 @@ choice
 	config BR2_PTHREADS_NATIVE
 		bool "Native POSIX Threading (NPTL)"
 		select BR2_TOOLCHAIN_HAS_THREADS
-		depends on !BR2_x86_i386
-		depends on !BR2_avr32
-		depends on !BR2_xtensa
 		depends on !BR2_arc
+		depends on !BR2_avr32
+		depends on !BR2_bfin
+		depends on !BR2_xtensa
+		depends on !BR2_x86_i386
 endchoice
 
 config BR2_PTHREAD_DEBUG
@@ -126,6 +128,17 @@ config BR2_PTHREAD_DEBUG
 	select BR2_TOOLCHAIN_HAS_THREADS_DEBUG
 	help
 	  Build the thread library with debugging enabled.
+
+config BR2_UCLIBC_INSTALL_UTILS
+	bool "Compile and install uClibc utilities"
+	depends on !BR2_bfin
+	default y
+	help
+	  Enabling this option will compile and install the getconf,
+	  ldconfig and ldd uClibc utilities for the target.
+
+	  You can save ~32 KiB in target space by disabling them since
+	  they're normally not needed.
 
 config BR2_UCLIBC_INSTALL_TEST_SUITE
 	bool "Compile and install uClibc tests"

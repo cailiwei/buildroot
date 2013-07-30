@@ -159,11 +159,14 @@ endif
 ifneq ($(call qstrip,$(BR2_GCC_TARGET_ABI)),)
 HOST_GCC_COMMON_CONF_OPT += --with-abi=$(BR2_GCC_TARGET_ABI)
 endif
+# GCC doesn't support --with-cpu for bfin
+ifeq ($(BR2_bfin),)
 ifneq ($(call qstrip,$(BR2_GCC_TARGET_CPU)),)
 ifneq ($(call qstrip,$(BR2_GCC_TARGET_CPU_REVISION)),)
 HOST_GCC_COMMON_CONF_OPT += --with-cpu=$(call qstrip,$(BR2_GCC_TARGET_CPU)-$(BR2_GCC_TARGET_CPU_REVISION))
 else
 HOST_GCC_COMMON_CONF_OPT += --with-cpu=$(call qstrip,$(BR2_GCC_TARGET_CPU))
+endif
 endif
 endif
 
@@ -196,6 +199,11 @@ endif
 
 # ARM Thumb and mudflap aren't friends
 ifeq ($(BR2_ARM_INSTRUCTIONS_THUMB),y)
+HOST_GCC_COMMON_CONF_OPT += --disable-libmudflap
+endif
+
+# Blackfin doesn't do mudflap
+ifeq ($(BR2_bfin),y)
 HOST_GCC_COMMON_CONF_OPT += --disable-libmudflap
 endif
 
