@@ -1,6 +1,6 @@
 #/bin/bash
 # install nfs tool
-sudo apt-get install nfs-kernel-server tunctl
+sudo apt-get install nfs-kernel-server uml-utilities bridge-utils
 
 # sudo echo "/srv/nfsroot/ *(rw,sync,no_root_squash,no_subtree_check)" >> /etc/exports
 

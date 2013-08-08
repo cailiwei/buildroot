@@ -9,6 +9,8 @@ base=$(dirname $0)
 
 echo Starting in $base
 
+$base/nfs_ready.sh
+
 name_nand="$base/mini2440_nand64.bin"
 
 if [ ! -f "$name_nand" ]; then
@@ -38,4 +40,9 @@ cmd2="qemu-system-arm -M mini2440 $* \
 
 # echo $cmd
 # echo $cmd2
+echo "##### make sure to set u-boot bootargs: #####"
+echo "set bootargs noinitrd root=/dev/nfs rw nfsroot=192.168.123.1:/srv/nfsroot ip=192.168.123.2:192.168.123.1::255.255.255.0 console=ttySAC0,115200"
+echo "##### make sure to set u-boot bootargs: #####"
+
 $cmd2
+

@@ -1,0 +1,52 @@
+Before run 'mini2440_start.sh', you should:
+
+	* 1. Download rootfs from: wget http://arm9download.cncncn.com/mini2440/linux/rootfs_qtopia_qt4-20100816.tar.gz
+
+	* 2. sudo tar zxvf rootfs_qtopia_qt4-20100816.tar.gz -C /srv/
+
+	* 3. sudo vim /etc/exports, add below content to the end:
+
+	  	 /srv/nfsroot *(rw,sync,no_root_squash,no_subtree_check)
+
+	* 4. cd /srv/  --> mv rootfs_qtopia nfsroot --> cd nfsroot --> vi ./etc/init.d/rcS
+		 the comment the fellow content:
+
+		 #/sbin/ifconfig lo 127.0.0.1
+		 #/etc/init.d/ifconfig-eth0
+		
+	* 5. sudo vim ./etc/profile add:
+
+		export TSLIB_TSDEVICE=/dev/input/event0 
+		export TSLIB_CONFFILE=/usr/local/etc/ts.conf
+		export TSLIB_PLUGINDIR=/usr/local/lib/ts
+		export TSLIB_CALIBFILE=/etc/pointercal
+		export QTDIR=/opt/Qtopia
+		export QPEDIR=/opt/Qtopia
+		export PATH=$QTDIR/bin:$PATH
+		export LD_LIBRARY_PATH=$QTDIR/lib:/usr/local/lib:$LD_LIBRARY_PATH
+
+
+		TS_INFO_FILE=/sys/devices/virtual/input/input0/uevent
+		if [ -e $TS_INFO_FILE -a "/bin/grep -q TouchScreen < $TS_INFO_FILE" ]; then
+			export QWS_MOUSE_PROTO="TPanel:/dev/input/event0 USB:/dev/input/mice"
+			if [ -e /etc/pointercal -a ! -s /etc/pointercal ] ; then
+				rm /etc/pointercal
+			fi
+		else
+			export QWS_MOUSE_PROTO="USB:/dev/input/mice"
+			>/etc/pointercal
+		fi
+		unset TS_INFO_FILE
+
+		export QWS_KEYBOARD=TTY:/dev/tty1
+		export KDEDIR=/opt/kde
+
+		export HOME=/root
+
+	* 6. ./mini2440_start.sh
+
+	* 7. set u-boot bootargs:
+
+		set bootargs noinitrd root=/dev/nfs rw nfsroot=192.168.123.1:/srv/nfsroot ip=192.168.123.2:192.168.123.1::255.255.255.0 console=ttySAC0,115200
+
+That's all, enjoy yourself!
