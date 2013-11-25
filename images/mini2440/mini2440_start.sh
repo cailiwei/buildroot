@@ -11,12 +11,12 @@ echo Starting in $base
 
 $base/nfs_ready.sh
 
-name_nand="$base/mini2440_nand64.bin"
+name_nand="$base/64M.nand"
 
 if [ ! -f "$name_nand" ]; then
 	echo "$0 : creating NAND empty image : $name_nand"
-	dd if=/dev/zero of="$name_nand" bs=528 count=131072
-#	dd if=/dev/zero of="$name_nand" bs=528 count=127100
+#	dd if=/dev/zero of="$name_nand" bs=528 count=131072
+	dd if=/dev/zero of="$name_nand" bs=528 count=127100
 	echo "** NAND file created - make sure to 'nand scrub' and 'nand createbbt' in u-boot"
 fi
 
@@ -41,8 +41,9 @@ cmd2="qemu-system-arm -M mini2440 $* \
 # echo $cmd
 # echo $cmd2
 echo "##### make sure to set u-boot bootargs: #####"
+echo
 echo "set bootargs noinitrd root=/dev/nfs rw nfsroot=192.168.123.1:/srv/nfsroot ip=192.168.123.2:192.168.123.1::255.255.255.0 console=ttySAC0,115200"
+echo
 echo "##### make sure to set u-boot bootargs: #####"
 
 $cmd2
-

@@ -49,4 +49,30 @@ Before run 'mini2440_start.sh', you should:
 
 		set bootargs noinitrd root=/dev/nfs rw nfsroot=192.168.123.1:/srv/nfsroot ip=192.168.123.2:192.168.123.1::255.255.255.0 console=ttySAC0,115200
 
+
+After all:
+	
+	use the flashimg to make partition:
+	
+	Step 1:
+	* ./flashimg -s 64M -t nand -f mtdblock.nand -p uboot.part -w boot,u-boot.bin -w kernel,uImage -w root,rootfs.jffs2 -z 512
+	* ./flashimg -s 2M -t nor -f nor.bin -p uboot.part -w boot,u-boot.bin -w kernel,uImage -w root,rootfs.jffs2
+
+	Step 2:
+	* qemu-system-arm -M mini2440 -serial stdio -mtdblock mtdblock.nand -usbdevice mouse
+
+	Step 3:
+	* nboot kernel
+	* setenv bootargs root=/dev/mtdblock3 rootfstype=jffs2 console=ttySAC0,115200 mini2440=3tb 
+	* saveenv
+	* bootm
+
+PS:
+
+mkfs.jffs2:
+	* mkfs.jffs2 -s 0x1000 -e 0x40000 -p 0x500000 -d rootfs/ -o jffs2.img
+	-s 节点页的大小
+	-e 块的大小
+	-p 分区的总空间
+
 That's all, enjoy yourself!
