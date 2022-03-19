@@ -4,26 +4,46 @@
 #
 ################################################################################
 
-BOOT_WRAPPER_AARCH64_VERSION        = 26b62f586020fd998c6efd43db657eaafeec14da
-BOOT_WRAPPER_AARCH64_SITE           = git://git.kernel.org/pub/scm/linux/kernel/git/cmarinas/boot-wrapper-aarch64.git
-BOOT_WRAPPER_AARCH64_LICENSE        = BSD3c
-BOOT_WRAPPER_AARCH64_LICENSE_FILES  = LICENSE.txt
-BOOT_WRAPPER_AARCH64_DEPENDENCIES   = linux
+BOOT_WRAPPER_AARCH64_VERSION = 8d5a765251d9113c3c0f9fa14de42a9e7486fe8a
+BOOT_WRAPPER_AARCH64_SITE = git://git.kernel.org/pub/scm/linux/kernel/git/mark/boot-wrapper-aarch64.git
+BOOT_WRAPPER_AARCH64_LICENSE = BSD-3-Clause
+BOOT_WRAPPER_AARCH64_LICENSE_FILES = LICENSE.txt
+BOOT_WRAPPER_AARCH64_DEPENDENCIES = linux
 BOOT_WRAPPER_AARCH64_INSTALL_IMAGES = YES
 
-BOOT_WRAPPER_AARCH64_DTS = $(call qstrip,$(BR2_TARGET_BOOT_WRAPPER_AARCH64_DTS))
+# The Git repository does not have the generated configure script and
+# Makefile.
+BOOT_WRAPPER_AARCH64_AUTORECONF = YES
 
-define BOOT_WRAPPER_AARCH64_BUILD_CMDS
-	$(MAKE) \
-		KERNEL=$(BINARIES_DIR)/Image \
-		DTC=$(LINUX_DIR)/scripts/dtc/dtc \
-		FDT_SRC=$(LINUX_DIR)/arch/arm64/boot/dts/$(BOOT_WRAPPER_AARCH64_DTS).dts \
-		CROSS_COMPILE="$(CCACHE) $(TARGET_CROSS)" \
-		BOOTARGS='$(BR2_TARGET_BOOT_WRAPPER_AARCH64_BOOTARGS)' -C $(@D)
-endef
+BOOT_WRAPPER_AARCH64_DTB = $(LINUX_DIR)/arch/arm64/boot/dts/$(basename $(call qstrip,$(BR2_TARGET_BOOT_WRAPPER_AARCH64_DTS))).dtb
+
+BOOT_WRAPPER_AARCH64_CONF_OPTS = \
+	--with-kernel-dir=$(LINUX_DIR) \
+	--with-dtb=$(BOOT_WRAPPER_AARCH64_DTB) \
+	--with-cmdline=$(BR2_TARGET_BOOT_WRAPPER_AARCH64_BOOTARGS)
+
+ifeq ($(BR2_TARGET_BOOT_WRAPPER_AARCH64_PSCI),y)
+BOOT_WRAPPER_AARCH64_CONF_OPTS += --enable-psci
+else
+BOOT_WRAPPER_AARCH64_CONF_OPTS += --disable-psci
+endif
+
+ifeq ($(BR2_TARGET_BOOT_WRAPPER_AARCH64_GICV3),y)
+BOOT_WRAPPER_AARCH64_CONF_OPTS += --enable-gicv3
+endif
+
+# We need to convince the configure script that the Linux kernel tree
+# exists, as well as the DTB and the kernel Image. Even though those
+# are available on the build machine, the configure script uses
+# AC_CHECK_FILE tests, which are always disabled in cross-compilation
+# situations.
+BOOT_WRAPPER_AARCH64_CONF_ENV = \
+	$(call AUTOCONF_AC_CHECK_FILE_VAL,$(LINUX_DIR))=yes \
+	$(call AUTOCONF_AC_CHECK_FILE_VAL,$(LINUX_DIR)$(BOOT_WRAPPER_AARCH64_DTB))=yes \
+	$(call AUTOCONF_AC_CHECK_FILE_VAL,$(LINUX_DIR)/arch/arm64/boot/Image)=yes
 
 define BOOT_WRAPPER_AARCH64_INSTALL_IMAGES_CMDS
 	cp $(@D)/linux-system.axf $(BINARIES_DIR)
 endef
 
-$(eval $(generic-package))
+$(eval $(autotools-package))

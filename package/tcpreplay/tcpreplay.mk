@@ -4,16 +4,34 @@
 #
 ################################################################################
 
-TCPREPLAY_VERSION = 3.4.3
-TCPREPLAY_SITE = http://downloads.sourceforge.net/project/tcpreplay/tcpreplay/$(TCPREPLAY_VERSION)
-TCPREPLAY_CONF_ENV = tr_cv_libpcap_version=">= 0.7.0"
-TCPREPLAY_CONF_OPT = --with-libpcap=$(STAGING_DIR)/usr
-TCPREPLAY_AUTORECONF = YES
+TCPREPLAY_VERSION = 4.3.4
+TCPREPLAY_SITE = https://github.com/appneta/tcpreplay/releases/download/v$(TCPREPLAY_VERSION)
+TCPREPLAY_SOURCE = tcpreplay-$(TCPREPLAY_VERSION).tar.xz
+TCPREPLAY_LICENSE = GPL-3.0
+TCPREPLAY_LICENSE_FILES = docs/LICENSE
+TCPREPLAY_CPE_ID_VENDOR = tcpreplay
+TCPREPLAY_CONF_ENV = \
+	ac_cv_path_ac_pt_PCAP_CONFIG="$(STAGING_DIR)/usr/bin/pcap-config"
+TCPREPLAY_CONF_OPTS = --with-libpcap=$(STAGING_DIR)/usr \
+	--enable-pcapconfig
 TCPREPLAY_DEPENDENCIES = libpcap
 
-# libpcap may depend on symbols in libusb as well
-TCPREPLAY_LIBS = -lpcap $(if $(BR2_PACKAGE_LIBUSB),-lusb-1.0)
-TCPREPLAY_CONF_ENV += ac_cv_search_pcap_close='$(TCPREPLAY_LIBS)'
+ifeq ($(BR2_STATIC_LIBS),y)
+TCPREPLAY_CONF_OPTS += --enable-dynamic-link=no
+TCPREPLAY_CONF_ENV += LIBS="`$(STAGING_DIR)/usr/bin/pcap-config --static --libs`"
+endif
+
+ifeq ($(BR2_PACKAGE_LIBDNET),y)
+TCPREPLAY_DEPENDENCIES += libdnet
+TCPREPLAY_CONF_OPTS += --with-libdnet=$(STAGING_DIR)/usr
+else
+TCPREPLAY_CONF_OPTS += --without-libdnet
+endif
+
+ifeq ($(BR2_PACKAGE_TCPDUMP),y)
+TCPREPLAY_CONF_ENV += ac_cv_path_tcpdump_path=/usr/sbin/tcpdump
+else
+TCPREPLAY_CONF_ENV += ac_cv_path_tcpdump_path=no
+endif
 
 $(eval $(autotools-package))
-

@@ -4,10 +4,10 @@
 #
 ################################################################################
 
-TINYMEMBENCH_VERSION = v0.2
-TINYMEMBENCH_SITE = http://github.com/ssvb/tinymembench/tarball/$(TINYMEMBENCH_VERSION)
+TINYMEMBENCH_VERSION = 0.4
+TINYMEMBENCH_SITE = $(call github,ssvb,tinymembench,v$(TINYMEMBENCH_VERSION))
 TINYMEMBENCH_LICENSE = MIT
-TINYMEMBENCH_LICENSE_FILES = main.c
+TINYMEMBENCH_LICENSE_FILES = LICENSE
 
 define TINYMEMBENCH_BUILD_CMDS
 	$(TARGET_CONFIGURE_OPTS) $(MAKE) -C $(@D)
@@ -19,4 +19,3 @@ define TINYMEMBENCH_INSTALL_TARGET_CMDS
 endef
 
 $(eval $(generic-package))
-

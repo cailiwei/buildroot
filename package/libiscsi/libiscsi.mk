@@ -4,12 +4,14 @@
 #
 ################################################################################
 
-LIBISCSI_VERSION         = 1.6.0
-LIBISCSI_SOURCE          = libiscsi-$(LIBISCSI_VERSION).tar.gz
-LIBISCSI_SITE            = https://github.com/downloads/sahlberg/libiscsi
-LIBISCSI_LICENSE         = GPLv2+ LGPLv2.1+
-LIBISCSI_LICENSE_FILES   = COPYING LICENCE-GPL-2.txt LICENCE-LGPL-2.1.txt
+LIBISCSI_VERSION = 1.19.0
+LIBISCSI_SITE = $(call github,sahlberg,libiscsi,$(LIBISCSI_VERSION))
+LIBISCSI_LICENSE = GPL-2.0+, LGPL-2.1+
+LIBISCSI_LICENSE_FILES = COPYING LICENCE-GPL-2.txt LICENCE-LGPL-2.1.txt
 LIBISCSI_INSTALL_STAGING = YES
-LIBISCSI_DEPENDENCIES    = popt
+LIBISCSI_AUTORECONF = YES
+
+LIBISCSI_CONF_OPTS = --disable-examples --disable-werror --disable-manpages \
+	--disable-test-tool --disable-tests
 
 $(eval $(autotools-package))

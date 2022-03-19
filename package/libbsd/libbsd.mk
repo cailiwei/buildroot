@@ -4,18 +4,14 @@
 #
 ################################################################################
 
-LIBBSD_VERSION         = 0.4.2
-LIBBSD_SOURCE          = libbsd-$(LIBBSD_VERSION).tar.gz
-LIBBSD_SITE            = http://libbsd.freedesktop.org/releases
-LIBBSD_LICENSE         = BSD-3c MIT
-LIBBSD_LICENSE_FILES   = COPYING
-
-# man-pages are BSD-4c, so that license only matters
-# if doc is kept in the target rootfs
-ifeq ($(BR2_HAVE_DOCUMENTATION),y)
-LIBBSD_LICENSE        += (libraries), BSD-4c (documentation)
-endif
-
+LIBBSD_VERSION = 0.11.3
+LIBBSD_SOURCE = libbsd-$(LIBBSD_VERSION).tar.xz
+LIBBSD_SITE = https://libbsd.freedesktop.org/releases
+LIBBSD_LICENSE = BSD-2-Clause, BSD-3-Clause, BSD-4-Clause, BSD-5-Clause, \
+		MIT, ISC, Beerware
+LIBBSD_LICENSE_FILES = COPYING
+LIBBSD_CPE_ID_VENDOR = freedesktop
 LIBBSD_INSTALL_STAGING = YES
+LIBBSD_DEPENDENCIES = libmd
 
 $(eval $(autotools-package))

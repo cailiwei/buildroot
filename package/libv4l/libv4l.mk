@@ -4,41 +4,87 @@
 #
 ################################################################################
 
-LIBV4L_VERSION = 0.8.9
+LIBV4L_VERSION = 1.22.1
 LIBV4L_SOURCE = v4l-utils-$(LIBV4L_VERSION).tar.bz2
-LIBV4L_SITE = http://linuxtv.org/downloads/v4l-utils/
+LIBV4L_SITE = https://linuxtv.org/downloads/v4l-utils
 LIBV4L_INSTALL_STAGING = YES
-LIBV4L_MAKE_OPTS = PREFIX=/usr
-LIBV4L_DEPENDENCIES = jpeg
+LIBV4L_DEPENDENCIES = host-pkgconf
+LIBV4L_CONF_OPTS = --disable-doxygen-doc --disable-qvidcap
+# needed to get utils/qv4l link flags right
+LIBV4L_AUTORECONF = YES
+# add host-gettext for AM_ICONV macro
+LIBV4L_DEPENDENCIES += host-gettext
 
-LIBV4L_DIRS_y += lib
-LIBV4L_DIRS_$(BR2_PACKAGE_LIBV4L_DECODE_TM6000)	+= utils/libv4l2util utils/decode_tm6000
-LIBV4L_DIRS_$(BR2_PACKAGE_LIBV4L_IR_KEYTABLE)	+= utils/keytable
-LIBV4L_DIRS_$(BR2_PACKAGE_LIBV4L_V4L2_COMPLIANCE) += utils/v4l2-compliance
-LIBV4L_DIRS_$(BR2_PACKAGE_LIBV4L_V4L2_CTL)	+= utils/v4l2-ctl
-LIBV4L_DIRS_$(BR2_PACKAGE_LIBV4L_V4L2_DBG)	+= utils/v4l2-dbg
+# fix uclibc-ng configure/compile
+LIBV4L_CONF_ENV = ac_cv_prog_cc_c99='-std=gnu99'
 
-ifeq ($(BR2_PREFER_STATIC_LIB),y)
-	LIBV4L_MAKE_OPTS += LINKTYPE=static
+# v4l-utils components have different licences, see v4l-utils.spec for details
+LIBV4L_LICENSE = GPL-2.0+ (utilities), LGPL-2.1+ (libraries)
+LIBV4L_LICENSE_FILES = COPYING COPYING.libv4l lib/libv4l1/libv4l1-kernelcode-license.txt
+
+ifeq ($(BR2_PACKAGE_ALSA_LIB),y)
+LIBV4L_DEPENDENCIES += alsa-lib
 endif
 
-define LIBV4L_BUILD_CMDS
-	for i in $(LIBV4L_DIRS_y); do \
-		$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D)/$$i \
-			$(LIBV4L_MAKE_OPTS) || exit 1 ; done
-endef
+ifeq ($(BR2_PACKAGE_ARGP_STANDALONE),y)
+LIBV4L_DEPENDENCIES += argp-standalone
+LIBV4L_LIBS += -largp
+endif
 
-define LIBV4L_INSTALL_STAGING_CMDS
-	for i in $(LIBV4L_DIRS_y); do \
-		$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D)/$$i \
-			DESTDIR=$(STAGING_DIR) $(LIBV4L_MAKE_OPTS) install || exit 1; done
-endef
+LIBV4L_DEPENDENCIES += $(if $(BR2_PACKAGE_LIBICONV),libiconv)
 
-define LIBV4L_INSTALL_TARGET_CMDS
-	for i in $(LIBV4L_DIRS_y); do \
-		$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D)/$$i \
-			DESTDIR=$(TARGET_DIR) $(LIBV4L_MAKE_OPTS) install || exit 1; done
-endef
+ifeq ($(BR2_PACKAGE_JPEG),y)
+LIBV4L_DEPENDENCIES += jpeg
+LIBV4L_CONF_OPTS += --with-jpeg
+else
+LIBV4L_CONF_OPTS += --without-jpeg
+endif
 
-$(eval $(generic-package))
+ifeq ($(BR2_PACKAGE_HAS_LIBGL),y)
+LIBV4L_DEPENDENCIES += libgl
+endif
 
+ifeq ($(BR2_PACKAGE_HAS_UDEV),y)
+LIBV4L_CONF_OPTS += --with-libudev --with-udevdir=/usr/lib/udev
+LIBV4L_DEPENDENCIES += udev
+else
+LIBV4L_CONF_OPTS += --without-libudev
+endif
+
+ifeq ($(BR2_PACKAGE_LIBGLU),y)
+LIBV4L_DEPENDENCIES += libglu
+endif
+
+ifeq ($(BR2_PACKAGE_LIBV4L_UTILS),y)
+LIBV4L_CONF_OPTS += --enable-v4l-utils
+LIBV4L_DEPENDENCIES += $(TARGET_NLS_DEPENDENCIES)
+
+# v4l2-ctl needs c++11, use gnu++11 for typeof support
+LIBV4L_CONF_ENV += CXXFLAGS="$(TARGET_CXXFLAGS) -std=gnu++11"
+
+# IR BPF decoder support needs toolchain with linux-headers >= 3.18
+# libelf and clang support
+LIBV4L_CONF_OPTS += --disable-bpf
+
+ifeq ($(BR2_PACKAGE_QT5BASE)$(BR2_PACKAGE_QT5BASE_GUI)$(BR2_PACKAGE_QT5BASE_WIDGETS),yyy)
+LIBV4L_CONF_OPTS += --enable-qv4l2
+LIBV4L_DEPENDENCIES += qt5base
+# protect against host version detection of moc-qt5/rcc-qt5/uic-qt5
+LIBV4L_CONF_ENV += \
+	ac_cv_prog_MOC=$(HOST_DIR)/bin/moc \
+	ac_cv_prog_RCC=$(HOST_DIR)/bin/rcc \
+	ac_cv_prog_UIC=$(HOST_DIR)/bin/uic
+else
+LIBV4L_CONF_OPTS += --disable-qv4l2
+endif
+else
+LIBV4L_CONF_OPTS += --disable-v4l-utils
+endif
+
+ifeq ($(BR2_PACKAGE_SDL2_IMAGE),y)
+LIBV4L_DEPENDENCIES += sdl2_image
+endif
+
+LIBV4L_CONF_ENV += LIBS="$(LIBV4L_LIBS)"
+
+$(eval $(autotools-package))

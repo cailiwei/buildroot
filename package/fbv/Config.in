@@ -1,9 +1,9 @@
 config BR2_PACKAGE_FBV
 	bool "fbv"
 	help
-	  fbv is a very simple graphic file viewer for the framebuffer console,
-	  capable of displaying GIF, JPEG, PNG and BMP files using libungif,
-	  libjpeg and libpng.
+	  fbv is a very simple graphic file viewer for the framebuffer
+	  console, capable of displaying GIF, JPEG, PNG and BMP files
+	  using libungif, libjpeg and libpng.
 
 	  http://freshmeat.net/projects/fbv/
 
@@ -26,8 +26,8 @@ config BR2_PACKAGE_FBV_JPEG
 config BR2_PACKAGE_FBV_GIF
 	bool "GIF support"
 	default y
-	select BR2_PACKAGE_LIBUNGIF
+	select BR2_PACKAGE_GIFLIB
 	help
-	  Enable support for GIF using libungif.
+	  Enable support for GIF using giflib.
 
 endif # BR2_PACKAGE_FBV

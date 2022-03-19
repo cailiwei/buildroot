@@ -4,15 +4,18 @@
 #
 ################################################################################
 
-SYLPHEED_VERSION_MAJOR = 3.2
-SYLPHEED_VERSION_MINOR = 0
-SYLPHEED_VERSION = $(SYLPHEED_VERSION_MAJOR).$(SYLPHEED_VERSION_MINOR)
-SYLPHEED_SOURCE = sylpheed-$(SYLPHEED_VERSION).tar.bz2
+SYLPHEED_VERSION_MAJOR = 3.7
+SYLPHEED_VERSION = $(SYLPHEED_VERSION_MAJOR).0
+SYLPHEED_SOURCE = sylpheed-$(SYLPHEED_VERSION).tar.xz
 SYLPHEED_SITE = http://sylpheed.sraoss.jp/sylpheed/v$(SYLPHEED_VERSION_MAJOR)
-SYLPHEED_LICENSE = GPLv2+ (executables), LGPLv2.1+ (library, attachment plugin)
+SYLPHEED_LICENSE = GPL-2.0+ (executables), LGPL-2.1+ (library, attachment plugin)
 SYLPHEED_LICENSE_FILES = COPYING COPYING.LIB
-SYLPHEED_CONF_OPT = --disable-gtkspell --disable-gpgme
+SYLPHEED_CPE_ID_VENDOR = sylpheed_project
+SYLPHEED_CONF_OPTS = --disable-gtkspell --disable-gpgme
 SYLPHEED_DEPENDENCIES = host-pkgconf libgtk2
+
+# 0001-harden-link-checker-before-accepting-click.patch
+SYLPHEED_IGNORE_CVES += CVE-2021-37746
 
 # Remove the -I$(includedir) from the Makefiles
 # because it refers to the host /usr/include.
@@ -26,9 +29,9 @@ SYLPHEED_PRE_CONFIGURE_HOOKS += SYLPHEED_PRECONFIGURE
 
 ifeq ($(BR2_PACKAGE_OPENSSL),y)
 SYLPHEED_DEPENDENCIES += openssl
-SYLPHEED_CONF_OPT += --enable-ssl
+SYLPHEED_CONF_OPTS += --enable-ssl
 else
-SYLPHEED_CONF_OPT += --disable-ssl
+SYLPHEED_CONF_OPTS += --disable-ssl
 endif
 
 $(eval $(autotools-package))

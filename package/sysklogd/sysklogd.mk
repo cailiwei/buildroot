@@ -4,53 +4,41 @@
 #
 ################################################################################
 
-SYSKLOGD_VERSION = 1.5
-SYSKLOGD_SOURCE  = sysklogd_$(SYSKLOGD_VERSION).orig.tar.gz
-SYSKLOGD_PATCH   = sysklogd_$(SYSKLOGD_VERSION)-6.diff.gz
-SYSKLOGD_SITE    = $(BR2_DEBIAN_MIRROR)/debian/pool/main/s/sysklogd
+SYSKLOGD_VERSION = 2.3.0
+SYSKLOGD_SITE = https://github.com/troglobit/sysklogd/releases/download/v$(SYSKLOGD_VERSION)
+SYSKLOGD_LICENSE = BSD-3-Clause
+SYSKLOGD_LICENSE_FILES = LICENSE
+SYSKLOGD_CPE_ID_VENDOR = sysklogd_project
 
-# Override Busybox implementations if Busybox is enabled.
-ifeq ($(BR2_PACKAGE_BUSYBOX),y)
-SYSKLOGD_DEPENDENCIES = busybox
+# Busybox install logger in /usr/bin, and syslogd in /sbin, so install in
+# the same locations so that busybox does not install its applets in there.
+SYSKLOGD_CONF_OPTS = \
+	--bindir=/usr/bin \
+	--sbindir=/sbin \
+	--with-suspend-time=$(BR2_PACKAGE_SYSKLOGD_REMOTE_DELAY)
+
+# Disable/Enable utilities
+ifeq ($(BR2_PACKAGE_SYSKLOGD_LOGGER),y)
+SYSKLOGD_CONF_OPTS += --with-logger
+else
+SYSKLOGD_CONF_OPTS += --without-logger
 endif
 
-define SYSKLOGD_DEBIAN_PATCHES
-	if [ -d $(@D)/debian/patches ]; then \
-		support/scripts/apply-patches.sh $(@D) $(@D)/debian/patches \*.patch; \
-	fi
+define SYSKLOGD_INSTALL_SAMPLE_CONFIG
+	$(INSTALL) -D -m 0644 $(@D)/syslog.conf \
+		$(TARGET_DIR)/etc/syslog.conf
 endef
 
-SYSKLOGD_POST_PATCH_HOOKS = SYSKLOGD_DEBIAN_PATCHES
+SYSKLOGD_POST_INSTALL_TARGET_HOOKS += SYSKLOGD_INSTALL_SAMPLE_CONFIG
 
-define SYSKLOGD_BUILD_CMDS
-	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D)
+define SYSKLOGD_INSTALL_INIT_SYSV
+	$(INSTALL) -m 755 -D package/sysklogd/S01syslogd \
+		$(TARGET_DIR)/etc/init.d/S01syslogd
 endef
 
-define SYSKLOGD_INSTALL_TARGET_CMDS
-	$(INSTALL) -D -m 0500 $(@D)/syslogd $(TARGET_DIR)/usr/sbin/syslogd
-	$(INSTALL) -D -m 0500 $(@D)/klogd $(TARGET_DIR)/usr/sbin/klogd
-	$(INSTALL) -D -m 0644 $(@D)/sysklogd.8 $(TARGET_DIR)/usr/share/man/man8/sysklogd.8
-	$(INSTALL) -D -m 0644 $(@D)/syslogd.8 $(TARGET_DIR)/usr/share/man/man8/syslogd.8
-	$(INSTALL) -D -m 0644 $(@D)/syslog.conf.5 $(TARGET_DIR)/usr/share/man/man5/syslog.conf.5
-	$(INSTALL) -D -m 0644 $(@D)/klogd.8 $(TARGET_DIR)/usr/share/man/man8/klogd.8
-	if [ ! -f $(TARGET_DIR)/etc/syslog.conf ]; then \
-		$(INSTALL) -D -m 0644 package/sysklogd/syslog.conf \
-			$(TARGET_DIR)/etc/syslog.conf; \
-	fi
+define SYSKLOGD_INSTALL_INIT_SYSTEMD
+	$(INSTALL) -D -m 644 $(SYSKLOGD_PKGDIR)/syslogd.service \
+		$(TARGET_DIR)/usr/lib/systemd/system/syslogd.service
 endef
 
-define SYSKLOGD_UNINSTALL_TARGET_CMDS
-	rm -f $(TARGET_DIR)/usr/sbin/syslogd
-	rm -f $(TARGET_DIR)/usr/sbin/klogd
-	rm -f $(TARGET_DIR)/usr/share/man/man8/sysklogd.8
-	rm -f $(TARGET_DIR)/usr/share/man/man8/syslogd.8
-	rm -f $(TARGET_DIR)/usr/share/man/man5/syslog.conf.5
-	rm -f $(TARGET_DIR)/usr/share/man/man8/klogd.8
-	rm -f $(TARGET_DIR)/etc/syslog.conf
-endef
-
-define SYSKLOGD_CLEAN_CMDS
-	$(MAKE) -C $(@D) clean
-endef
-
-$(eval $(generic-package))
+$(eval $(autotools-package))

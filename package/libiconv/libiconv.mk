@@ -4,22 +4,23 @@
 #
 ################################################################################
 
-LIBICONV_VERSION = 1.14
-LIBICONV_SOURCE = libiconv-$(LIBICONV_VERSION).tar.gz
+LIBICONV_VERSION = 1.15
 LIBICONV_SITE = $(BR2_GNU_MIRROR)/libiconv
 LIBICONV_INSTALL_STAGING = YES
+LIBICONV_LICENSE = GPL-3.0+ (iconv program), LGPL-2.0+ (library)
+LIBICONV_LICENSE_FILES = COPYING COPYING.LIB
 
-# Remove not used preloadable libiconv.so
-define LIBICONV_TARGET_REMOVE_PRELOADABLE_LIBS
-	rm -f $(TARGET_DIR)/usr/lib/preloadable_libiconv.so
+ifeq ($(BR2_PACKAGE_LIBICONV_EXTRA_ENCODINGS),y)
+LIBICONV_CONF_OPTS += --enable-extra-encodings
+endif
+
+# Don't build the preloadable library, as we don't need it (it's only
+# for LD_PRELOAD to replace glibc's iconv, but we never build libiconv
+# when glibc is used). And it causes problems for static only builds.
+define LIBICONV_DISABLE_PRELOAD
+	$(SED) '/preload/d' $(@D)/Makefile.in
 endef
-
-define LIBICONV_STAGING_REMOVE_PRELOADABLE_LIBS
-	rm -f $(STAGING_DIR)/usr/lib/preloadable_libiconv.so
-endef
-
-LIBICONV_POST_INSTALL_TARGET_HOOKS += LIBICONV_TARGET_REMOVE_PRELOADABLE_LIBS
-LIBICONV_POST_INSTALL_STAGING_HOOKS += LIBICONV_STAGING_REMOVE_PRELOADABLE_LIBS
+LIBICONV_PRE_CONFIGURE_HOOKS += LIBICONV_DISABLE_PRELOAD
 
 $(eval $(autotools-package))
 

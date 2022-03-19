@@ -4,33 +4,40 @@
 #
 ################################################################################
 
-QUOTA_VERSION = 4.00
-QUOTA_SOURCE = quota-$(QUOTA_VERSION).tar.gz
+QUOTA_VERSION = 4.06
 QUOTA_SITE = http://downloads.sourceforge.net/project/linuxquota/quota-tools/$(QUOTA_VERSION)
-QUOTA_DEPENDENCIES = host-gettext
-QUOTA_AUTORECONF = YES
+QUOTA_DEPENDENCIES = $(TARGET_NLS_DEPENDENCIES) host-nfs-utils
+QUOTA_LICENSE = GPL-2.0+
+QUOTA_LICENSE_FILES = COPYING
+QUOTA_CPE_ID_VENDOR = jan_kara
+QUOTA_CPE_ID_PRODUCT = linux_diskquota
+QUOTA_SELINUX_MODULES = quota
+QUOTA_CONF_ENV = LIBS="$(TARGET_NLS_LIBS)"
+QUOTA_CONF_OPTS = --disable-pie
 
-QUOTA_CFLAGS = $(TARGET_CFLAGS)
-QUOTA_LDFLAGS = $(TARGET_LDFLAGS)
+ifeq ($(BR2_PACKAGE_DBUS)$(BR2_PACKAGE_LIBNL),yy)
+QUOTA_DEPENDENCIES += host-pkgconf dbus libnl
+QUOTA_CONF_OPTS += --enable-netlink
+else
+QUOTA_CONF_OPTS += --disable-netlink
+endif
 
-ifeq ($(BR2_NEEDS_GETTEXT_IF_LOCALE),y)
-QUOTA_DEPENDENCIES += gettext
-QUOTA_LDFLAGS += -lintl
+ifeq ($(BR2_PACKAGE_E2FSPROGS),y)
+QUOTA_DEPENDENCIES += host-pkgconf e2fsprogs
+QUOTA_CONF_OPTS += --enable-ext2direct
+else
+QUOTA_CONF_OPTS += --disable-ext2direct
 endif
 
 ifeq ($(BR2_PACKAGE_LIBTIRPC),y)
-QUOTA_DEPENDENCIES += libtirpc
-QUOTA_CFLAGS += -I$(STAGING_DIR)/usr/include/tirpc/
-QUOTA_LDFLAGS += -ltirpc
+QUOTA_DEPENDENCIES += libtirpc host-pkgconf
 endif
 
-QUOTA_MAKE_OPT = $(TARGET_CONFIGURE_OPTS) CFLAGS="$(QUOTA_CFLAGS) -D_GNU_SOURCE" LDFLAGS="$(QUOTA_LDFLAGS)"
-QUOTA_CONF_ENV = \
-	CFLAGS="$(QUOTA_CFLAGS) -D_GNU_SOURCE" LDFLAGS="$(QUOTA_LDFLAGS)"
-
-# Package uses autoconf but not automake.
-QUOTA_INSTALL_TARGET_OPT = \
-	ROOTDIR=$(TARGET_DIR) \
-	install
+ifeq ($(BR2_PACKAGE_OPENLDAP):$(BR2_STATIC_LIBS),y:)
+QUOTA_DEPENDENCIES += openldap
+QUOTA_CONF_OPTS += --enable-ldapmail
+else
+QUOTA_CONF_OPTS += --disable-ldapmail
+endif
 
 $(eval $(autotools-package))

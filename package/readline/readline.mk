@@ -4,23 +4,28 @@
 #
 ################################################################################
 
-READLINE_VERSION = 6.2
-READLINE_SOURCE = readline-$(READLINE_VERSION).tar.gz
+READLINE_VERSION = 8.1.2
 READLINE_SITE = $(BR2_GNU_MIRROR)/readline
 READLINE_INSTALL_STAGING = YES
-READLINE_DEPENDENCIES = ncurses
-READLINE_CONF_ENV = bash_cv_func_sigsetjmp=yes
-READLINE_LICENSE = GPLv3+
+READLINE_DEPENDENCIES = ncurses host-autoconf
+HOST_READLINE_DEPENDENCIES = host-ncurses host-autoconf
+READLINE_CONF_ENV = bash_cv_func_sigsetjmp=yes \
+	bash_cv_wcwidth_broken=no
+READLINE_CONF_OPTS = --disable-install-examples
+READLINE_LICENSE = GPL-3.0+
 READLINE_LICENSE_FILES = COPYING
+READLINE_CPE_ID_VENDOR = gnu
 
-define READLINE_INSTALL_TARGET_CMDS
-	$(MAKE1) DESTDIR=$(TARGET_DIR) -C $(@D) uninstall
-	$(MAKE1) DESTDIR=$(TARGET_DIR) -C $(@D) install-shared uninstall-doc
-	chmod 775 $(TARGET_DIR)/usr/lib/libreadline.so.$(READLINE_VERSION) \
-		$(TARGET_DIR)/usr/lib/libhistory.so.$(READLINE_VERSION)
-	$(STRIPCMD) $(STRIP_STRIP_UNNEEDED) \
-		$(TARGET_DIR)/usr/lib/libreadline.so.$(READLINE_VERSION) \
-		$(TARGET_DIR)/usr/lib/libhistory.so.$(READLINE_VERSION)
+ifeq ($(BR2_PACKAGE_READLINE_BRACKETED_PASTE),y)
+READLINE_CONF_OPTS += --enable-bracketed-paste-default
+else
+READLINE_CONF_OPTS += --disable-bracketed-paste-default
+endif
+
+define READLINE_INSTALL_INPUTRC
+	$(INSTALL) -D -m 644 package/readline/inputrc $(TARGET_DIR)/etc/inputrc
 endef
+READLINE_POST_INSTALL_TARGET_HOOKS += READLINE_INSTALL_INPUTRC
 
 $(eval $(autotools-package))
+$(eval $(host-autotools-package))

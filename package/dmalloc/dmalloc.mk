@@ -4,31 +4,51 @@
 #
 ################################################################################
 
-DMALLOC_VERSION = 5.4.3
+DMALLOC_VERSION = 5.6.5
 DMALLOC_SOURCE = dmalloc-$(DMALLOC_VERSION).tgz
 DMALLOC_SITE = http://dmalloc.com/releases
 
-DMALLOC_LICENSE = MIT-like
-# license is in each file, dmalloc.h.1 is the smallest one
-DMALLOC_LICENSE_FILES = dmalloc.h.1
+DMALLOC_LICENSE = ISC
+DMALLOC_LICENSE_FILES = LICENSE.txt
 
 DMALLOC_INSTALL_STAGING = YES
-DMALLOC_CONF_OPT = --enable-shlib
+DMALLOC_CFLAGS = $(TARGET_CFLAGS)
+
+ifeq ($(BR2_STATIC_LIBS),y)
+DMALLOC_CONF_OPTS += --disable-shlib
+else
+DMALLOC_CONF_OPTS += --enable-shlib
+DMALLOC_CFLAGS += -fPIC
+endif
 
 ifeq ($(BR2_INSTALL_LIBSTDCPP),y)
-DMALLOC_CONF_OPT += --enable-cxx
+DMALLOC_CONF_OPTS += --enable-cxx
 else
-DMALLOC_CONF_OPT += --disable-cxx
+DMALLOC_CONF_OPTS += --disable-cxx
 endif
 
 ifeq ($(BR2_TOOLCHAIN_HAS_THREADS),y)
-DMALLOC_CONF_OPT += --enable-threads
+DMALLOC_CONF_OPTS += --enable-threads
 else
-DMALLOC_CONF_OPT += --disable-threads
+DMALLOC_CONF_OPTS += --disable-threads
 endif
+
+# dmalloc has some assembly function that are not present in thumb1 mode:
+# Error: lo register required -- `str lr,[sp,#4]'
+# so, we desactivate thumb mode
+ifeq ($(BR2_ARM_INSTRUCTIONS_THUMB),y)
+DMALLOC_CFLAGS += -marm
+endif
+
+ifeq ($(BR2_TOOLCHAIN_HAS_GCC_BUG_63261),y)
+DMALLOC_CFLAGS += -O0
+endif
+
+DMALLOC_CONF_ENV = CFLAGS="$(DMALLOC_CFLAGS)"
 
 define DMALLOC_POST_PATCH
 	$(SED) 's/^ac_cv_page_size=0$$/ac_cv_page_size=12/' $(@D)/configure
+	$(SED) 's/ac_cv_strdup_macro=no$$/ac_cv_strdup_macro=yes/' $(@D)/configure
 	$(SED) 's/(ld -/($${LD-ld} -/' $(@D)/configure
 	$(SED) 's/'\''ld -/"$${LD-ld}"'\'' -/' $(@D)/configure
 	$(SED) 's/ar cr/$$(AR) cr/' $(@D)/Makefile.in
@@ -38,7 +58,7 @@ DMALLOC_POST_PATCH_HOOKS += DMALLOC_POST_PATCH
 
 # both DESTDIR and PREFIX are ignored..
 define DMALLOC_INSTALL_STAGING_CMDS
-	$(MAKE) includedir="$(STAGING_DIR)/usr/include" \
+	$(TARGET_MAKE_ENV) $(MAKE) includedir="$(STAGING_DIR)/usr/include" \
 		bindir="$(STAGING_DIR)/usr/bin" \
 		libdir="$(STAGING_DIR)/usr/lib" \
 		shlibdir="$(STAGING_DIR)/usr/lib" \
@@ -46,18 +66,15 @@ define DMALLOC_INSTALL_STAGING_CMDS
 		-C $(@D) install
 endef
 
-define DMALLOC_INSTALL_TARGET_CMDS
+ifeq ($(BR2_STATIC_LIBS),)
+define DMALLOC_INSTALL_SHARED_LIB
 	cp -dpf $(STAGING_DIR)/usr/lib/libdmalloc*.so $(TARGET_DIR)/usr/lib
+endef
+endif
+
+define DMALLOC_INSTALL_TARGET_CMDS
+	$(DMALLOC_INSTALL_SHARED_LIB)
 	cp -dpf $(STAGING_DIR)/usr/bin/dmalloc $(TARGET_DIR)/usr/bin/dmalloc
 endef
-
-define DMALLOC_CLEAN_CMDS
-	-rm -f $(TARGET_DIR)/usr/lib/libdmalloc*
-	-rm -f $(STAGING_DIR)/usr/lib/libdmalloc*
-	rm -f $(STAGING_DIR)/usr/include/dmalloc.h
-	rm -f $(TARGET_DIR)/usr/bin/dmalloc
-	-$(MAKE) -C $(DMALLOC_DIR) clean
-endef
-
 
 $(eval $(autotools-package))

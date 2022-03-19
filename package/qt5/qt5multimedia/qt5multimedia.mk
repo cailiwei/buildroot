@@ -4,46 +4,34 @@
 #
 ################################################################################
 
-QT5MULTIMEDIA_VERSION = $(QT5_VERSION)
-QT5MULTIMEDIA_SITE = $(QT5_SITE)
-QT5MULTIMEDIA_SOURCE = qtmultimedia-opensource-src-$(QT5MULTIMEDIA_VERSION).tar.xz
-QT5MULTIMEDIA_DEPENDENCIES = qt5base qt5declarative
+QT5MULTIMEDIA_VERSION = bd29c87027637a013f2c5e3b549fcda84e4d7545
+QT5MULTIMEDIA_SITE = $(QT5_SITE)/qtmultimedia/-/archive/$(QT5MULTIMEDIA_VERSION)
+QT5MULTIMEDIA_SOURCE = qtmultimedia-$(QT5MULTIMEDIA_VERSION).tar.bz2
 QT5MULTIMEDIA_INSTALL_STAGING = YES
+QT5MULTIMEDIA_SYNC_QT_HEADERS = YES
 
-ifeq ($(BR2_PACKAGE_QT5BASE_LICENSE_APPROVED),y)
-QT5MULTIMEDIA_CONFIGURE_OPTS += -opensource -confirm-license
-QT5MULTIMEDIA_LICENSE = LGPLv2.1 or GPLv3.0
-# Here we would like to get license files from qt5base, but qt5base
-# may not be extracted at the time we get the legal-info for
-# qt5script.
-else
-QT5MULTIMEDIA_LICENSE = Commercial license
-QT5MULTIMEDIA_REDISTRIBUTE = NO
+QT5MULTIMEDIA_LICENSE = GPL-2.0+ or LGPL-3.0, GPL-3.0 with exception(tools), GFDL-1.3 (docs)
+QT5MULTIMEDIA_LICENSE_FILES = LICENSE.GPL2 LICENSE.GPL3 LICENSE.GPL3-EXCEPT LICENSE.LGPL3 LICENSE.FDL
+
+ifeq ($(BR2_PACKAGE_GST1_PLUGINS_BASE),y)
+QT5MULTIMEDIA_DEPENDENCIES += gst1-plugins-base
 endif
 
-define QT5MULTIMEDIA_CONFIGURE_CMDS
-	(cd $(@D); $(HOST_DIR)/usr/bin/qmake)
-endef
-
-define QT5MULTIMEDIA_BUILD_CMDS
-	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D)
-endef
-
-define QT5MULTIMEDIA_INSTALL_STAGING_CMDS
-	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D) install
-	$(QT5_LA_PRL_FILES_FIXUP)
-endef
-
-ifeq ($(BR2_PREFER_STATIC_LIB),)
-define QT5MULTIMEDIA_INSTALL_TARGET_LIBS
-	cp -dpf $(STAGING_DIR)/usr/lib/libQt5Multimedia*.so.* $(TARGET_DIR)/usr/lib
-	cp -dpfr $(STAGING_DIR)/usr/lib/qt/plugins/* $(TARGET_DIR)/usr/lib/qt/plugins
-endef
+ifeq ($(BR2_PACKAGE_QT5DECLARATIVE),y)
+QT5MULTIMEDIA_DEPENDENCIES += qt5declarative
 endif
 
-define QT5MULTIMEDIA_INSTALL_TARGET_CMDS
-	cp -dpfr $(STAGING_DIR)/usr/qml/* $(TARGET_DIR)/usr/qml
-	$(QT5MULTIMEDIA_INSTALL_TARGET_LIBS)
-endef
+ifeq ($(BR2_PACKAGE_LIBGLIB2)$(BR2_PACKAGE_PULSEAUDIO),yy)
+QT5MULTIMEDIA_DEPENDENCIES += libglib2 pulseaudio
+endif
 
-$(eval $(generic-package))
+ifeq ($(BR2_PACKAGE_ALSA_LIB),y)
+QT5MULTIMEDIA_DEPENDENCIES += alsa-lib
+endif
+
+ifeq ($(BR2_PACKAGE_QT5BASE_EXAMPLES),y)
+QT5MULTIMEDIA_LICENSE += , LGPL-2.1+ (examples/multimedia/spectrum/3rdparty/fftreal)
+QT5MULTIMEDIA_LICENSE_FILES += examples/multimedia/spectrum/3rdparty/fftreal/license.txt
+endif
+
+$(eval $(qmake-package))

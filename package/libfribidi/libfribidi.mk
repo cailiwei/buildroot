@@ -4,11 +4,15 @@
 #
 ################################################################################
 
-LIBFRIBIDI_VERSION = 0.19.5
-LIBFRIBIDI_SOURCE = fribidi-$(LIBFRIBIDI_VERSION).tar.bz2
-LIBFRIBIDI_SITE = http://www.fribidi.org/download/
-LIBFRIBIDI_LICENSE = LGPLv2.1+
+LIBFRIBIDI_VERSION = 1.0.11
+LIBFRIBIDI_SOURCE = fribidi-$(LIBFRIBIDI_VERSION).tar.xz
+LIBFRIBIDI_SITE = https://github.com/fribidi/fribidi/releases/download/v$(LIBFRIBIDI_VERSION)
+LIBFRIBIDI_LICENSE = LGPL-2.1+
 LIBFRIBIDI_LICENSE_FILES = COPYING
+LIBFRIBIDI_CPE_ID_VENDOR = gnu
+LIBFRIBIDI_CPE_ID_PRODUCT = fribidi
 LIBFRIBIDI_INSTALL_STAGING = YES
+LIBFRIBIDI_DEPENDENCIES = host-pkgconf
 
 $(eval $(autotools-package))
+$(eval $(host-autotools-package))

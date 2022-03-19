@@ -3,4 +3,4 @@ config BR2_PACKAGE_LBASE64
 	help
 	  A base64 library for Lua
 
-	  http://luaforge.net/projects/lbase64/
+	  http://webserver2.tecgraf.puc-rio.br/~lhf/ftp/lua/#lbase64

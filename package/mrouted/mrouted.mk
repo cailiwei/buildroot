@@ -4,25 +4,29 @@
 #
 ################################################################################
 
-MROUTED_VERSION = 3.9.6
-MROUTED_SOURCE = mrouted-$(MROUTED_VERSION).tar.bz2
-MROUTED_SITE = http://cloud.github.com/downloads/troglobit/mrouted
+MROUTED_VERSION = 4.4
+MROUTED_SITE = \
+	https://github.com/troglobit/mrouted/releases/download/$(MROUTED_VERSION)
 MROUTED_DEPENDENCIES = host-bison
+MROUTED_LICENSE = BSD-3-Clause
+MROUTED_LICENSE_FILES = LICENSE
+MROUTED_CPE_ID_VENDOR = troglobit
 
-define MROUTED_BUILD_CMDS
-	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D)
+define MROUTED_INSTALL_INIT_SYSV
+	$(INSTALL) -m 755 -D package/mrouted/S41mrouted \
+		$(TARGET_DIR)/etc/init.d/S41mrouted
 endef
 
-define MROUTED_INSTALL_TARGET_CMDS
-	$(MAKE) prefix=/usr DESTDIR=$(TARGET_DIR) -C $(@D) install
+define MROUTED_INSTALL_INIT_SYSTEMD
+	$(INSTALL) -D -m 644 $(@D)/mrouted.service \
+		$(TARGET_DIR)/usr/lib/systemd/system/mrouted.service
 endef
 
-define MROUTED_UNINSTALL_TARGET_CMDS
-	$(MAKE) prefix=/usr DESTDIR=$(TARGET_DIR) -C $(@D) uninstall
+# We will asume that CONFIG_NET and CONFIG_INET are already
+# set in the kernel configuration provided by the user.
+define MROUTED_LINUX_CONFIG_FIXUPS
+	$(call KCONFIG_ENABLE_OPT,CONFIG_IP_MULTICAST)
+	$(call KCONFIG_ENABLE_OPT,CONFIG_IP_MROUTE)
 endef
 
-define MROUTED_CLEAN_CMDS
-	$(MAKE) -C $(@D) clean
-endef
-
-$(eval $(generic-package))
+$(eval $(autotools-package))

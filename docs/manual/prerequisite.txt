@@ -2,23 +2,19 @@
 // vim: set syntax=asciidoc:
 
 [[requirement]]
-System requirements
--------------------
+== System requirements
 
 Buildroot is designed to run on Linux systems.
 
-Buildroot needs some software to be already installed on the host
-system; here are the lists of the mandatory and optional packages
-(package names may vary between distributions).
-
-Take care to _install both runtime and development data_, especially
-for the libraries that may be packaged in 2 distinct packages.
-
+While Buildroot itself will build most host packages it needs for the
+compilation, certain standard Linux utilities are expected to be
+already installed on the host system. Below you will find an overview of
+the mandatory and optional packages (note that package names may vary
+between distributions).
 
 [[requirement-mandatory]]
 
-Mandatory packages
-~~~~~~~~~~~~~~~~~~
+=== Mandatory packages
 
 * Build tools:
 
@@ -27,35 +23,54 @@ Mandatory packages
 ** +make+ (version 3.81 or any later)
 ** +binutils+
 ** +build-essential+ (only for Debian based systems)
-** +gcc+ (version 2.95 or any later)
-** `g++` (version 2.95 or any later)
+** +gcc+ (version 4.8 or any later)
+** `g++` (version 4.8 or any later)
 ** +bash+
 ** +patch+
 ** +gzip+
 ** +bzip2+
-** +perl+
+** +perl+ (version 5.8.7 or any later)
 ** +tar+
 ** +cpio+
-** +python+ (version 2.6 or 2.7)
 ** +unzip+
 ** +rsync+
+** +file+ (must be in +/usr/bin/file+)
+** +bc+
 
 * Source fetching tools:
 ** +wget+
 
 [[requirement-optional]]
 
-Optional packages
-~~~~~~~~~~~~~~~~~
+=== Optional packages
+
+* Recommended dependencies:
++
+Some features or utilities in Buildroot, like the legal-info, or the
+graph generation tools, have additional dependencies. Although they
+are not mandatory for a simple build, they are still highly recommended:
++
+** +python+ (version 2.7 or any later)
+
+* Configuration interface dependencies:
++
+For these libraries, you need to install both runtime and development
+data, which in many distributions are packaged separately. The
+development packages typically have a _-dev_ or _-devel_ suffix.
++
+** +ncurses5+ to use the 'menuconfig' interface
+** +qt5+ to use the 'xconfig' interface
+** +glib2+, +gtk2+ and +glade2+ to use the 'gconfig' interface
 
 * Source fetching tools:
 +
-In the official tree, most of the package sources are retrieved
-using +wget+; a few are only available through their +git+, +mercurial+,
-or +svn+ repository.
-+
-All other source fetching methods are implemented and may be used in a
-development context (further details: refer to xref:download-infra[]).
+In the official tree, most of the package sources are retrieved using
++wget+ from _ftp_, _http_ or _https_ locations. A few packages are only
+available through a version control system. Moreover, Buildroot is
+capable of downloading sources via other tools, like +rsync+ or +scp+
+(refer to xref:download-infra[] for more details). If you enable
+packages using any of these methods, you will need to install the
+corresponding tool on the host system:
 +
 ** +bazaar+
 ** +cvs+
@@ -63,12 +78,8 @@ development context (further details: refer to xref:download-infra[]).
 ** +mercurial+
 ** +rsync+
 ** +scp+
+** +sftp+
 ** +subversion+
-
-* Configuration interface dependencies (requires development libraries):
-** +ncurses5+ to use the 'menuconfig' interface
-** +qt4+ to use the 'xconfig' interface
-** +glib2+, +gtk2+ and +glade2+ to use the 'gconfig' interface
 
 * Java-related packages, if the Java Classpath needs to be built for
   the target system:
@@ -76,4 +87,11 @@ development context (further details: refer to xref:download-infra[]).
 ** The +jar+ tool
 
 * Documentation generation tools:
-** +asciidoc+
+** +asciidoc+, version 8.6.3 or higher
+** +w3m+
+** +python+ with the +argparse+ module (automatically present in 2.7+ and 3.2+)
+** +dblatex+ (required for the pdf manual only)
+
+* Graph generation tools:
+** +graphviz+ to use 'graph-depends' and '<pkg>-graph-depends'
+** +python-matplotlib+ to use 'graph-build'

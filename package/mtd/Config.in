@@ -1,9 +1,27 @@
 config BR2_PACKAGE_MTD
-	bool "mtd/jffs2 utilities"
+	bool "mtd, jffs2 and ubi/ubifs tools"
 	help
-	  Build mtd/jffs utilities
+	  Build mtd, jffs2 and ubi/ubifs tools
+
+	  http://www.linux-mtd.infradead.org/
 
 if BR2_PACKAGE_MTD
+
+# The two hidden options below match mtd configure script options
+# --enable-jffs and --enable-ubifs
+
+config BR2_PACKAGE_MTD_JFFS_UTILS
+	bool
+	select BR2_PACKAGE_LZO
+	select BR2_PACKAGE_ZLIB
+
+config BR2_PACKAGE_MTD_UBIFS_UTILS
+	bool
+	select BR2_PACKAGE_LZO
+	select BR2_PACKAGE_UTIL_LINUX
+	select BR2_PACKAGE_UTIL_LINUX_LIBUUID
+	select BR2_PACKAGE_ZLIB
+
 comment "MTD tools selection"
 
 config BR2_PACKAGE_MTD_DOCFDISK
@@ -36,6 +54,9 @@ config BR2_PACKAGE_MTD_FLASH_OTP_LOCK
 config BR2_PACKAGE_MTD_FLASH_OTP_WRITE
 	bool "flash_otp_write"
 
+config BR2_PACKAGE_MTD_FLASH_OTP_ERASE
+	bool "flash_otp_erase"
+
 config BR2_PACKAGE_MTD_FLASH_UNLOCK
 	bool "flash_unlock"
 	default y
@@ -48,27 +69,22 @@ config BR2_PACKAGE_MTD_FTL_FORMAT
 
 config BR2_PACKAGE_MTD_JFFS2DUMP
 	bool "jffs2dump"
+	select BR2_PACKAGE_MTD_JFFS_UTILS
 
 config BR2_PACKAGE_MTD_MKFSJFFS2
 	bool "mkfs.jffs2"
-	select BR2_PACKAGE_ZLIB
-	select BR2_PACKAGE_LZO
+	select BR2_PACKAGE_MTD_JFFS_UTILS
 
 config BR2_PACKAGE_MTD_MKFSUBIFS
 	bool "mkfs.ubifs"
-	select BR2_PACKAGE_ZLIB
-	select BR2_PACKAGE_LZO
-	select BR2_PACKAGE_UTIL_LINUX
-	select BR2_PACKAGE_UTIL_LINUX_LIBUUID
-	depends on BR2_LARGEFILE # util-linux
-	depends on BR2_USE_WCHAR # util-linux
-
-comment "mkfs.ubifs requires largefile and wchar support in toolchain"
-	depends on !BR2_LARGEFILE || !BR2_USE_WCHAR
+	select BR2_PACKAGE_MTD_UBIFS_UTILS
 
 config BR2_PACKAGE_MTD_MTD_DEBUG
 	bool "mtd_debug"
 	default y
+
+config BR2_PACKAGE_MTD_MTDPART
+	bool "mtdpart"
 
 config BR2_PACKAGE_MTD_NANDDUMP
 	bool "nanddump"
@@ -82,6 +98,9 @@ config BR2_PACKAGE_MTD_NANDWRITE
 	bool "nandwrite"
 	default y
 
+config BR2_PACKAGE_MTD_NANDFLIPBITS
+	bool "nandflipbits"
+
 config BR2_PACKAGE_MTD_NFTLDUMP
 	bool "nftldump"
 
@@ -89,11 +108,7 @@ config BR2_PACKAGE_MTD_NFTL_FORMAT
 	bool "nftl_format"
 
 config BR2_PACKAGE_MTD_RECV_IMAGE
-	depends on BR2_INET_IPV6
 	bool "recv_image"
-
-comment "recv_image requires a toolchain with IPv6 support"
-	depends on !BR2_INET_IPV6
 
 config BR2_PACKAGE_MTD_RFDDUMP
 	bool "rfddump"
@@ -106,6 +121,7 @@ config BR2_PACKAGE_MTD_SERVE_IMAGE
 
 config BR2_PACKAGE_MTD_SUMTOOL
 	bool "sumtool"
+	select BR2_PACKAGE_MTD_JFFS_UTILS
 
 config BR2_PACKAGE_MTD_MTDINFO
 	bool "mtdinfo"
@@ -126,6 +142,14 @@ config BR2_PACKAGE_MTD_UBIDETACH
 config BR2_PACKAGE_MTD_UBIFORMAT
 	bool "ubiformat"
 	default y
+
+config BR2_PACKAGE_MTD_UBIHEALTHD
+	bool "ubihealthd"
+	default y
+	depends on BR2_TOOLCHAIN_HEADERS_AT_LEAST_3_17 # getrandom()
+
+comment "ubihealthd needs a toolchain w/ headers >= 3.17"
+	depends on !BR2_TOOLCHAIN_HEADERS_AT_LEAST_3_17
 
 config BR2_PACKAGE_MTD_UBIMKVOL
 	bool "ubimkvol"
@@ -155,5 +179,47 @@ config BR2_PACKAGE_MTD_UBIUPDATEVOL
 	bool "ubiupdatevol"
 	default y
 
+config BR2_PACKAGE_MTD_UBIBLOCK
+	bool "ubiblock"
+	default y
+
+config BR2_PACKAGE_MTD_TESTS
+	bool "MTD test tools"
+	depends on BR2_USE_MMU # fork() in fstests
+	depends on BR2_TOOLCHAIN_HAS_THREADS
+	help
+	  Build and install tools for testing MTD devices and drivers.
+
+if BR2_PACKAGE_MTD_TESTS
+
+config BR2_PACKAGE_MTD_FLASH_READTEST
+	bool "flash_readtest"
+
+config BR2_PACKAGE_MTD_FLASH_SPEED
+	bool "flash_speed"
+
+config BR2_PACKAGE_MTD_FLASH_STRESS
+	bool "flash_stress"
+
+config BR2_PACKAGE_MTD_FLASH_TORTURE
+	bool "flash_torture"
+
+config BR2_PACKAGE_MTD_INTEGCK
+	bool "integck"
+
+config BR2_PACKAGE_MTD_NANDBITERRS
+	bool "nandbiterrs"
+
+config BR2_PACKAGE_MTD_NANDPAGETEST
+	bool "nandpagetest"
+
+config BR2_PACKAGE_MTD_NANDSUBPAGETEST
+	bool "nandsubpagetest"
+
 endif
 
+comment "MTD test tools need a toolchain w/ threads"
+	depends on BR2_USE_MMU
+	depends on !BR2_TOOLCHAIN_HAS_THREADS
+
+endif

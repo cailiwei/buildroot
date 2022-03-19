@@ -4,57 +4,68 @@
 #
 ################################################################################
 
-LIBCAP_VERSION = 2.22
-# Until kernel.org is completely back up use debian mirror
-#LIBCAP_SITE = http://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2
-LIBCAP_SITE = $(BR2_DEBIAN_MIRROR)/debian/pool/main/libc/libcap2
-LIBCAP_SOURCE = libcap2_$(LIBCAP_VERSION).orig.tar.gz
-LIBCAP_LICENSE = GPLv2 or BSD-3c
+LIBCAP_VERSION = 2.62
+LIBCAP_SITE = https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2
+LIBCAP_SOURCE = libcap-$(LIBCAP_VERSION).tar.xz
+LIBCAP_LICENSE = GPL-2.0 or BSD-3-Clause
 LIBCAP_LICENSE_FILES = License
+LIBCAP_CPE_ID_VENDOR = libcap_project
 
-LIBCAP_DEPENDENCIES = host-libcap
+LIBCAP_DEPENDENCIES = host-gperf
 LIBCAP_INSTALL_STAGING = YES
 
-ifeq ($(BR2_PACKAGE_ATTR),y)
-	LIBCAP_DEPENDENCIES += attr
-	LIBCAP_HAVE_LIBATTR = yes
-else
-	LIBCAP_HAVE_LIBATTR = no
+HOST_LIBCAP_DEPENDENCIES = host-gperf
+
+LIBCAP_MAKE_FLAGS = \
+	CROSS_COMPILE="$(TARGET_CROSS)" \
+	BUILD_CC="$(HOSTCC)" \
+	BUILD_CFLAGS="$(HOST_CFLAGS)" \
+	lib=lib \
+	prefix=/usr \
+	SHARED=$(if $(BR2_STATIC_LIBS),,yes) \
+	PTHREADS=$(if $(BR2_TOOLCHAIN_HAS_THREADS),yes,)
+
+LIBCAP_MAKE_DIRS = libcap
+
+ifeq ($(BR2_PACKAGE_LIBCAP_TOOLS),y)
+LIBCAP_MAKE_DIRS += progs
 endif
 
-# we don't have host-attr
-HOST_LIBCAP_DEPENDENCIES =
-
 define LIBCAP_BUILD_CMDS
-	$(TARGET_MAKE_ENV) $(TARGET_CONFIGURE_OPTS) $(MAKE) -C $(@D) \
-		LIBATTR=$(LIBCAP_HAVE_LIBATTR) BUILD_CC="$(HOSTCC)" \
-		BUILD_CFLAGS="$(HOST_CFLAGS)"
+	$(foreach d,$(LIBCAP_MAKE_DIRS), \
+		$(TARGET_MAKE_ENV) $(TARGET_CONFIGURE_OPTS) $(MAKE) -C $(@D)/$(d) \
+			$(LIBCAP_MAKE_FLAGS) all
+	)
 endef
 
 define LIBCAP_INSTALL_STAGING_CMDS
-	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D) LIBATTR=$(LIBCAP_HAVE_LIBATTR) \
-		DESTDIR=$(STAGING_DIR) prefix=/usr lib=lib install
+	$(foreach d,$(LIBCAP_MAKE_DIRS), \
+		$(TARGET_MAKE_ENV) $(MAKE) -C $(@D)/$(d) $(LIBCAP_MAKE_FLAGS) \
+			DESTDIR=$(STAGING_DIR) install
+	)
 endef
 
 define LIBCAP_INSTALL_TARGET_CMDS
-	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D) LIBATTR=$(LIBCAP_HAVE_LIBATTR) \
-		DESTDIR=$(TARGET_DIR) prefix=/usr lib=lib install
+	$(foreach d,$(LIBCAP_MAKE_DIRS), \
+		$(TARGET_MAKE_ENV) $(MAKE) -C $(@D)/$(d) $(LIBCAP_MAKE_FLAGS) \
+			DESTDIR=$(TARGET_DIR) install
+	)
 endef
 
-# progs use fork()
-define LIBCAP_DISABLE_PROGS
-	$(SED) '/-C progs/d' $(@D)/Makefile
-endef
-
-LIBCAP_POST_PATCH_HOOKS += LIBCAP_DISABLE_PROGS
+HOST_LIBCAP_MAKE_FLAGS = \
+	DYNAMIC=yes \
+	GOLANG=no \
+	lib=lib \
+	prefix=$(HOST_DIR) \
+	RAISE_SETFCAP=no
 
 define HOST_LIBCAP_BUILD_CMDS
-	$(HOST_MAKE_ENV) $(HOST_CONFIGURE_OPTS) $(MAKE) -C $(@D) LIBATTR=no
+	$(HOST_MAKE_ENV) $(HOST_CONFIGURE_OPTS) $(MAKE) -C $(@D) \
+		$(HOST_LIBCAP_MAKE_FLAGS)
 endef
 
 define HOST_LIBCAP_INSTALL_CMDS
-	$(HOST_MAKE_ENV) $(MAKE) -C $(@D) LIBATTR=no DESTDIR=$(HOST_DIR) \
-		prefix=/usr lib=lib install
+	$(HOST_MAKE_ENV) $(MAKE) -C $(@D) $(HOST_LIBCAP_MAKE_FLAGS) install
 endef
 
 $(eval $(generic-package))

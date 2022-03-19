@@ -4,15 +4,23 @@
 #
 ################################################################################
 
-LIBXKBCOMMON_VERSION = 0.3.0
-LIBXKBCOMMON_SITE = http://xkbcommon.org/download/
+LIBXKBCOMMON_VERSION = 1.3.1
+LIBXKBCOMMON_SITE = https://xkbcommon.org/download
 LIBXKBCOMMON_SOURCE = libxkbcommon-$(LIBXKBCOMMON_VERSION).tar.xz
 LIBXKBCOMMON_LICENSE = MIT/X11
-LIBXKBCOMMON_LICENSE_FILES = COPYING
-
+LIBXKBCOMMON_LICENSE_FILES = LICENSE
 LIBXKBCOMMON_INSTALL_STAGING = YES
 LIBXKBCOMMON_DEPENDENCIES = host-bison host-flex
-# uses C99 features
-LIBXKBCOMMON_CONF_ENV = CFLAGS="$(TARGET_CFLAGS) -std=gnu99"
+LIBXKBCOMMON_CONF_OPTS = \
+	-Denable-docs=false \
+	-Denable-wayland=false \
+	-Denable-xkbregistry=false
 
-$(eval $(autotools-package))
+ifeq ($(BR2_PACKAGE_XORG7),y)
+LIBXKBCOMMON_CONF_OPTS += -Denable-x11=true
+LIBXKBCOMMON_DEPENDENCIES += libxcb
+else
+LIBXKBCOMMON_CONF_OPTS += -Denable-x11=false
+endif
+
+$(eval $(meson-package))

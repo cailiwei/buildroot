@@ -4,34 +4,14 @@
 #
 ################################################################################
 
-QEXTSERIALPORT_VERSION     = 6c47244de4ce6db
-QEXTSERIALPORT_SITE        = https://qextserialport.googlecode.com/git/
-QEXTSERIALPORT_SITE_METHOD = git
-
+QEXTSERIALPORT_VERSION = ada321a9ee463f628e7b781b8ed00ff219152158
+QEXTSERIALPORT_SITE = $(call github,qextserialport,qextserialport,$(QEXTSERIALPORT_VERSION))
 QEXTSERIALPORT_LICENSE = MIT
-
-QEXTSERIALPORT_DEPENDENCIES = qt
-
+QEXTSERIALPORT_LICENSE_FILES = LICENSE.md
 QEXTSERIALPORT_INSTALL_STAGING = YES
 
-define QEXTSERIALPORT_CONFIGURE_CMDS
-	(cd $(@D); $(QT_QMAKE))
-endef
+ifeq ($(BR2_STATIC_LIBS),y)
+QEXTSERIALPORT_CONF_OPTS += CONFIG+=qesp_static
+endif
 
-define QEXTSERIALPORT_BUILD_CMDS
-	$(MAKE) -C $(@D)
-endef
-
-define QEXTSERIALPORT_INSTALL_STAGING_CMDS
-	mkdir -p $(STAGING_DIR)/usr/include/QExtSerialPort
-	cp $(@D)/src/*.h $(STAGING_DIR)/usr/include/QExtSerialPort/
-	cp $(@D)/src/QExtSerialPort $(STAGING_DIR)/usr/include/QExtSerialPort/
-	cp -a $(@D)/*.so* $(STAGING_DIR)/usr/lib/
-	cp $(@D)/qextserialport.pc $(STAGING_DIR)/usr/lib/pkgconfig/
-endef
-
-define QEXTSERIALPORT_INSTALL_TARGET_CMDS
-	cp -a $(@D)/*.so.* $(TARGET_DIR)/usr/lib
-endef
-
-$(eval $(generic-package))
+$(eval $(qmake-package))

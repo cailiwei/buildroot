@@ -4,46 +4,36 @@
 #
 ################################################################################
 
-MINIDLNA_VERSION = 1.0.25
-MINIDLNA_SITE = http://downloads.sourceforge.net/project/minidlna/minidlna/$(MINIDLNA_VERSION)
-MINIDLNA_SOURCE = minidlna_$(MINIDLNA_VERSION)_src.tar.gz
-MINIDLNA_LICENSE = GPLv2 BSD-3c
-MINIDLNA_LICENSE_FILES = LICENCE LICENCE.miniupnpd
+MINIDLNA_VERSION = 1.3.0
+MINIDLNA_SITE = https://downloads.sourceforge.net/project/minidlna/minidlna/$(MINIDLNA_VERSION)
+MINIDLNA_LICENSE = GPL-2.0, BSD-3-Clause
+MINIDLNA_LICENSE_FILES = COPYING LICENCE.miniupnpd
+MINIDLNA_CPE_ID_VENDOR = readymedia_project
+MINIDLNA_CPE_ID_PRODUCT = readymedia
+MINIDLNA_SELINUX_MODULES = minidlna
 
 MINIDLNA_DEPENDENCIES = \
-	ffmpeg flac libvorbis libogg libid3tag libexif libjpeg sqlite \
+	$(TARGET_NLS_DEPENDENCIES) \
+	ffmpeg flac libvorbis libogg libid3tag libexif jpeg sqlite \
 	host-xutil_makedepend
 
-MINIDLNA_CFLAGS=$(TARGET_CFLAGS) \
-	-I"$(STAGING_DIR)/usr/include/libavutil" \
-	-I"$(STAGING_DIR)/usr/include/libavcodec" \
-	-I"$(STAGING_DIR)/usr/include/libavformat"
+MINIDLNA_CONF_OPTS = \
+	--disable-static
 
-ifeq ($(BR2_PACKAGE_GETTEXT),y)
-MINIDLNA_DEPENDENCIES += gettext
-# we need to link with libintl
-MINIDLNA_MAKE_OPTS += LIBS='-lpthread -lexif -ljpeg -lsqlite3 -lavformat -lavutil -lavcodec -lid3tag -lFLAC -logg -lvorbis -lintl'
-endif
-
-define MINIDLNA_BUILD_CMDS
-	PREFIX=$(STAGING_DIR)/usr \
-		$(TARGET_MAKE_ENV) $(MAKE) $(TARGET_CONFIGURE_OPTS) \
-		CFLAGS="$(MINIDLNA_CFLAGS)" -C $(@D) depend
-	$(TARGET_MAKE_ENV) $(MAKE) $(TARGET_CONFIGURE_OPTS) \
-		CFLAGS="$(MINIDLNA_CFLAGS)" $(MINIDLNA_MAKE_OPTS) -C $(@D) all
+define MINIDLNA_INSTALL_CONF
+	$(INSTALL) -D -m 644 $(@D)/minidlna.conf $(TARGET_DIR)/etc/minidlna.conf
 endef
 
-define MINIDLNA_INSTALL_TARGET_CMDS
-	$(TARGET_MAKE_ENV) $(MAKE) $(TARGET_CONFIGURE_OPTS) \
-		-C $(@D) DESTDIR=$(TARGET_DIR) install
+MINIDLNA_POST_INSTALL_TARGET_HOOKS += MINIDLNA_INSTALL_CONF
+
+define MINIDLNA_INSTALL_INIT_SYSV
+	$(INSTALL) -D -m 0755 package/minidlna/S60minidlnad \
+		$(TARGET_DIR)/etc/init.d/S60minidlnad
 endef
 
-define MINIDLNA_UNINSTALL_TARGET_CMDS
-	$(RM) $(TARGET_DIR)/usr/sbin/minidlna
+define MINIDLNA_INSTALL_INIT_SYSTEMD
+	$(INSTALL) -D -m 0644 package/minidlna/minidlnad.service \
+		$(TARGET_DIR)/usr/lib/systemd/system/minidlnad.service
 endef
 
-define MINIDLNA_CLEAN_CMDS
-	$(TARGET_MAKE_ENV) $(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) clean
-endef
-
-$(eval $(generic-package))
+$(eval $(autotools-package))

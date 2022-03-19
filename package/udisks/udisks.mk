@@ -4,26 +4,39 @@
 #
 ################################################################################
 
-UDISKS_VERSION = 1.0.4
-UDISKS_SITE    = http://hal.freedesktop.org/releases/
-UDISKS_LICENSE = GPLv2+
+UDISKS_VERSION = 2.9.4
+UDISKS_SOURCE = udisks-$(UDISKS_VERSION).tar.bz2
+UDISKS_SITE = https://github.com/storaged-project/udisks/releases/download/udisks-$(UDISKS_VERSION)
+UDISKS_LICENSE = GPL-2.0+
 UDISKS_LICENSE_FILES = COPYING
+UDISKS_CPE_ID_VENDOR = freedesktop
 
-UDISKS_DEPENDENCIES = 	\
-	sg3_utils	\
-	host-pkgconf	\
-	udev		\
-	dbus		\
-	dbus-glib	\
-	polkit		\
-	parted		\
-	lvm2		\
-	libatasmart
+UDISKS_DEPENDENCIES = \
+	host-pkgconf \
+	dbus \
+	dbus-glib \
+	libatasmart \
+	libblockdev \
+	libgudev \
+	parted \
+	polkit \
+	sg3_utils \
+	udev \
+	util-linux
 
-UDISKS_CONF_OPT = --disable-remote-access
-
-ifeq ($(BR2_PACKAGE_UDISKS_LVM2),y)
-UDISKS_CONF_OPT += --enable-lvm2
-endif
+UDISKS_CONF_OPTS = \
+	--disable-acl \
+	--disable-bcache \
+	--disable-btrfs \
+	--disable-fhs-media \
+	--disable-introspection \
+	--disable-iscsi \
+	--disable-lsm \
+	--disable-lvm2 \
+	--disable-lvmcache \
+	--disable-man \
+	--disable-rpath \
+	--disable-vdo \
+	--disable-zram
 
 $(eval $(autotools-package))

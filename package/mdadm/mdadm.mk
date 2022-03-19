@@ -4,23 +4,39 @@
 #
 ################################################################################
 
-MDADM_VERSION = 3.2.6
-MDADM_SOURCE = mdadm-$(MDADM_VERSION).tar.bz2
+MDADM_VERSION = 4.2
+MDADM_SOURCE = mdadm-$(MDADM_VERSION).tar.xz
 MDADM_SITE = $(BR2_KERNEL_MIRROR)/linux/utils/raid/mdadm
-MDADM_LICENSE = GPLv2+
+MDADM_LICENSE = GPL-2.0+
 MDADM_LICENSE_FILES = COPYING
 
-MDADM_MAKE_OPT = \
-	CFLAGS="$(TARGET_CFLAGS)" CC="$(TARGET_CC)" -C $(MDADM_DIR) mdadm
+MDADM_CXFLAGS = $(TARGET_CFLAGS)
 
-MDADM_INSTALL_TARGET_OPT = \
-	DESTDIR=$(TARGET_DIR)/usr -C $(MDADM_DIR) install-mdadm
+MDADM_BUILD_OPTS = \
+	CC=$(TARGET_CC) \
+	COROSYNC=-DNO_COROSYNC \
+	DLM=-DNO_DLM \
+	CWFLAGS="" \
+	CXFLAGS="$(MDADM_CXFLAGS)" \
+	CPPFLAGS="$(TARGET_CPPFLAGS) -DBINDIR=\\\"/sbin\\\"" \
+	CHECK_RUN_DIR=0
 
-MDADM_UNINSTALL_TARGET_OPT = \
-	DESTDIR=$(TARGET_DIR)/usr -C $(MDADM_DIR) uninstall
+ifeq ($(BR2_TOOLCHAIN_HAS_THREADS),)
+MDADM_BUILD_OPTS += USE_PTHREADS=
+endif
 
-define MDADM_CONFIGURE_CMDS
-	# Do nothing
+ifeq ($(BR2_PACKAGE_HAS_UDEV),y)
+MDADM_DEPENDENCIES += udev
+else
+MDADM_CXFLAGS += -DNO_LIBUDEV
+endif
+
+define MDADM_BUILD_CMDS
+	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D) $(MDADM_BUILD_OPTS) mdadm mdmon
 endef
 
-$(eval $(autotools-package))
+define MDADM_INSTALL_TARGET_CMDS
+	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D) DESTDIR=$(TARGET_DIR) install-bin
+endef
+
+$(eval $(generic-package))

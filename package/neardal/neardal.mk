@@ -4,14 +4,13 @@
 #
 ################################################################################
 
-NEARDAL_VERSION = 0.8
-NEARDAL_SITE = http://github.com/connectivity/neardal/tarball/$(NEARDAL_VERSION)
-NEARDAL_SOURCE = connectivity-neardal-$(NEARDAL_VERSION).tar.gz
+NEARDAL_VERSION = 4143d130ed39299bfc59d08d2c7c77dbc7f809e9
+NEARDAL_SITE = $(call github,connectivity,neardal,$(NEARDAL_VERSION))
 NEARDAL_INSTALL_STAGING = YES
-NEARDAL_LICENSE = GPLv2
+NEARDAL_LICENSE = LGPL-2.0
 NEARDAL_LICENSE_FILES = COPYING
 
-NEARDAL_DEPENDENCIES = host-pkgconf dbus dbus-glib
+NEARDAL_DEPENDENCIES = host-pkgconf dbus dbus-glib libedit
 NEARDAL_AUTORECONF = YES
 
 define NEARDAL_INSTALL_NCL
@@ -19,7 +18,7 @@ define NEARDAL_INSTALL_NCL
 endef
 
 ifeq ($(BR2_PACKAGE_NEARDAL_NCL),y)
-	NEARDAL_POST_INSTALL_TARGET_HOOKS += NEARDAL_INSTALL_NCL
+NEARDAL_POST_INSTALL_TARGET_HOOKS += NEARDAL_INSTALL_NCL
 endif
 
 $(eval $(autotools-package))

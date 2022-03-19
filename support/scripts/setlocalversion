@@ -1,5 +1,13 @@
 #!/bin/sh
-# Print additional version information for non-release trees.
+#
+# This scripts adds local version information from the version
+# control systems git, mercurial (hg) and subversion (svn).
+#
+# If something goes wrong, send a mail the kernel build mailinglist
+# (see MAINTAINERS) and CC Nico Schottelius
+# <nico-linuxsetlocalversion -at- schottelius.org>.
+#
+#
 
 usage() {
 	echo "Usage: $0 [srctree]" >&2
@@ -10,13 +18,15 @@ cd "${1:-.}" || usage
 
 # Check for git and a git repo.
 if head=`git rev-parse --verify --short HEAD 2>/dev/null`; then
-	# Do we have an untagged version?
-	if git name-rev --tags HEAD | grep -E '^HEAD[[:space:]]+(.*~[0-9]*|undefined)$' > /dev/null; then
-		if tag=`git describe 2>/dev/null`; then
-			echo $tag | awk -F- '{printf("-%05d-%s", $(NF-1),$(NF))}'
-		else
-			printf '%s%s' -g $head
-		fi
+
+	atag="`git describe 2>/dev/null`"
+
+	# Show -g<commit> if we have no tag, or just the tag
+	# otherwise.
+	if [ -z "${atag}" ] ; then
+		printf "%s%s" -g ${head}
+	else
+		printf ${atag}
 	fi
 
 	# Is this git on svn?
@@ -24,8 +34,10 @@ if head=`git rev-parse --verify --short HEAD 2>/dev/null`; then
 	        printf -- '-svn%s' "`git svn find-rev $head`"
 	fi
 
-	# Are there uncommitted changes?
-	git update-index --refresh --unmerged > /dev/null
+	# Update index only on r/w media
+	[ -w . ] && git update-index --refresh --unmerged > /dev/null
+
+	# Check for uncommitted changes
 	if git diff-index --name-only HEAD | grep -v "^scripts/package" \
 	    | read dummy; then
 		printf '%s' -dirty
@@ -36,13 +48,29 @@ if head=`git rev-parse --verify --short HEAD 2>/dev/null`; then
 fi
 
 # Check for mercurial and a mercurial repo.
-if hgid=`hg id 2>/dev/null`; then
-	tag=`printf '%s' "$hgid" | cut -d' ' -f2`
+# In the git case, 'git describe' will show the latest tag, and unless we are
+# exactly on that tag, the number of commits since then, and last commit id.
+# Mimic something similar in the Mercurial case.
+if hgid=`HGRCPATH= hg id --id --tags 2>/dev/null`; then
+	tag=`printf '%s' "$hgid" | cut -d' ' -f2 --only-delimited`
 
 	# Do we have an untagged version?
 	if [ -z "$tag" -o "$tag" = tip ]; then
+		# current revision is not tagged, determine latest tag
+		latesttag=`HGRCPATH= hg log -r. -T '{latesttag}' 2>/dev/null`
+		# In case there is more than one tag on the latest tagged commit,
+		# 'latesttag' will separate them by colon (:). We'll retain this.
+		# In case there is no tag at all, 'null' will be returned.
+		if [ "$latesttag" = "null" ]; then
+			latesttag=''
+		fi
+
+		# add the commit id
 		id=`printf '%s' "$hgid" | sed 's/[+ ].*//'`
-		printf '%s%s' -hg "$id"
+		printf '%s%s%s' "${latesttag}" -hg "$id"
+	else
+		# current revision is tagged, just print the tag
+		printf ${tag}
 	fi
 
 	# Are there uncommitted changes?
@@ -58,14 +86,7 @@ fi
 # Check for svn and a svn repo.
 if rev=`LC_ALL=C svn info 2>/dev/null | grep '^Last Changed Rev'`; then
 	rev=`echo $rev | awk '{print $NF}'`
-	changes=`LC_ALL=C svn status 2>/dev/null | grep '^[AMD]' | wc -l`
-
-	# Are there uncommitted changes?
-	if [ $changes != 0 ]; then
-		printf -- '-svn%s%s' "$rev" -dirty
-	else
-		printf -- '-svn%s' "$rev"
-	fi
+	printf -- '-svn%s' "$rev"
 
 	# All done with svn
 	exit

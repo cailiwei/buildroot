@@ -4,32 +4,32 @@
 #
 ################################################################################
 
-FLEX_VERSION = 2.5.37
-FLEX_SITE = http://download.sourceforge.net/project/flex
+FLEX_VERSION = 2.6.4
+FLEX_SITE = https://github.com/westes/flex/files/981163
 FLEX_INSTALL_STAGING = YES
 FLEX_LICENSE = FLEX
 FLEX_LICENSE_FILES = COPYING
-FLEX_DEPENDENCIES = \
-	$(if $(BR2_PACKAGE_GETTEXT_IF_LOCALE),gettext) host-m4
-FLEX_CONF_ENV = ac_cv_path_M4=/usr/bin/m4
-# we don't have a host-gettext/libintl
+FLEX_CPE_ID_VENDOR = flex_project
+# bug does not cause stack overflows in the generated code and has been
+# noted upstream as a bug in the code generator
+FLEX_IGNORE_CVES = CVE-2019-6293
+FLEX_DEPENDENCIES = $(TARGET_NLS_DEPENDENCIES) host-m4
 HOST_FLEX_DEPENDENCIES = host-m4
 
-ifeq ($(BR2_PACKAGE_FLEX_BINARY),y)
-# lex -> flex
-define FLEX_INSTALL_LEX
-	cd $(TARGET_DIR)/usr/bin && ln -snf flex lex
-endef
-FLEX_POST_INSTALL_HOOKS += FLEX_INSTALL_LEX
+# 0001-build-AC_USE_SYSTEM_EXTENSIONS-in-configure.ac.patch
+# 0002-build-make-it-possible-to-disable-the-build-of-the-f.patch
+# 0003-build-make-it-possible-to-disable-the-build-of-the-d.patch
+FLEX_AUTORECONF = YES
+FLEX_GETTEXTIZE = YES
+FLEX_CONF_ENV = ac_cv_path_M4=/usr/bin/m4 \
+	ac_cv_func_reallocarray=no
 
-else
-
-define FLEX_DISABLE_PROGRAM
-	$(SED) 's/^bin_PROGRAMS.*//' $(@D)/Makefile.in
-endef
-FLEX_POST_PATCH_HOOKS += FLEX_DISABLE_PROGRAM
-
-endif
+# Don't enable programs, they are not needed on the target, and
+# require MMU support.
+# Don't enable the doc, it's not needed on the target and requires
+# special tools (help2man) to build.
+FLEX_CONF_OPTS += --disable-program --disable-doc
+HOST_FLEX_CONF_OPTS = --disable-doc
 
 $(eval $(autotools-package))
 $(eval $(host-autotools-package))

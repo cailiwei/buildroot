@@ -4,11 +4,18 @@
 #
 ################################################################################
 
-LIBSAMPLERATE_VERSION = 0.1.8
+LIBSAMPLERATE_VERSION = 0.1.9
 LIBSAMPLERATE_SITE = http://www.mega-nerd.com/SRC
 LIBSAMPLERATE_INSTALL_STAGING = YES
 LIBSAMPLERATE_DEPENDENCIES = host-pkgconf
-LIBSAMPLERATE_CONF_OPT = --disable-fftw --program-transform-name=''
+LIBSAMPLERATE_CONF_OPTS = --disable-fftw --program-transform-name=''
+LIBSAMPLERATE_LICENSE = BSD-2-Clause
+LIBSAMPLERATE_LICENSE_FILES = COPYING
+LIBSAMPLERATE_CPE_ID_VENDOR = libsamplerate_project
+
+ifeq ($(BR2_PACKAGE_ALSA_LIB),y)
+LIBSAMPLERATE_DEPENDENCIES += alsa-lib
+endif
 
 ifeq ($(BR2_PACKAGE_LIBSNDFILE),y)
 LIBSAMPLERATE_DEPENDENCIES += libsndfile

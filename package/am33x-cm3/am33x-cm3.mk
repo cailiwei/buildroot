@@ -4,7 +4,8 @@
 #
 ################################################################################
 
-AM33X_CM3_VERSION = AM335xPSP_04.06.00.10-rc1
+# This should correpsond to v05.00.00.02
+AM33X_CM3_VERSION = 11107db2f1e9e58ee75d4fe9cc38423c9a6e4365
 AM33X_CM3_SITE = http://arago-project.org/git/projects/am33x-cm3.git
 AM33X_CM3_SITE_METHOD = git
 AM33X_CM3_LICENSE = TI Publicly Available Software License
@@ -13,7 +14,7 @@ AM33X_CM3_LICENSE_FILES = License.txt
 # The build command below will use the standard cross-compiler (normally
 # build for Cortex-A8, to build the FW for the Cortex-M3.
 define AM33X_CM3_BUILD_CMDS
-	$(MAKE) CC="$(TARGET_CC)" CROSS_COMPILE="$(TARGET_CROSS)" -C $(@D) all
+	$(TARGET_MAKE_ENV) $(MAKE) CC="$(TARGET_CC)" CROSS_COMPILE="$(TARGET_CROSS)" -C $(@D) all
 endef
 
 # Not all of the firmware files are used

@@ -4,23 +4,29 @@
 #
 ################################################################################
 
-SUPERVISOR_VERSION = 3.0a12
-SUPERVISOR_SOURCE = supervisor-$(SUPERVISOR_VERSION).tar.gz
-SUPERVISOR_SITE = http://pypi.python.org/packages/source/s/supervisor/
-SUPERVISOR_LICENSE_FILES = LICENSES.txt
+SUPERVISOR_VERSION = 4.2.2
+SUPERVISOR_SITE = https://files.pythonhosted.org/packages/d3/7f/c780b7471ba0ff4548967a9f7a8b0bfce222c3a496c3dfad0164172222b0
+SUPERVISOR_LICENSE = BSD-like, rdflib (http_client.py), PSF (medusa)
+SUPERVISOR_LICENSE_FILES = COPYRIGHT.txt LICENSES.txt
+SUPERVISOR_CPE_ID_VENDOR = supervisord
+SUPERVISOR_SETUP_TYPE = setuptools
 
-SUPERVISOR_DEPENDENCIES = python host-python-setuptools
-
-define SUPERVISOR_BUILD_CMDS
-	(cd $(@D); $(HOST_DIR)/usr/bin/python setup.py build)
-endef
-
-define SUPERVISOR_INSTALL_TARGET_CMDS
-	(cd $(@D); $(HOST_DIR)/usr/bin/python setup.py install --prefix=/usr --root=$(TARGET_DIR))
-	sed -i '1s|#!.*python.*|#!/usr/bin/env python|' $(TARGET_DIR)/usr/bin/{echo_supervisord_conf,pidproxy,supervisorctl,supervisord}
+define SUPERVISOR_INSTALL_CONF_FILES
 	$(INSTALL) -d -m 755 $(TARGET_DIR)/etc/supervisor.d
-	$(INSTALL) -D -m 644 package/supervisor/supervisord.conf $(TARGET_DIR)/etc/supervisord.conf
-	$(INSTALL) -m 755 package/supervisor/S99supervisord $(TARGET_DIR)/etc/init.d/S99supervisord
+	$(INSTALL) -D -m 644 package/supervisor/supervisord.conf \
+		$(TARGET_DIR)/etc/supervisord.conf
 endef
 
-$(eval $(generic-package))
+SUPERVISOR_POST_INSTALL_TARGET_HOOKS += SUPERVISOR_INSTALL_CONF_FILES
+
+define SUPERVISOR_INSTALL_INIT_SYSV
+	$(INSTALL) -D -m 755 package/supervisor/S99supervisord \
+		$(TARGET_DIR)/etc/init.d/S99supervisord
+endef
+
+define SUPERVISOR_INSTALL_INIT_SYSTEMD
+	$(INSTALL) -D -m 644 package/supervisor/supervisord.service \
+		$(TARGET_DIR)/usr/lib/systemd/system/supervisord.service
+endef
+
+$(eval $(python-package))

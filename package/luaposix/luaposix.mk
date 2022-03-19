@@ -4,12 +4,27 @@
 #
 ################################################################################
 
-LUAPOSIX_VERSION = 5.1.20
-LUAPOSIX_SITE = https://github.com/downloads/luaposix/luaposix
+LUAPOSIX_VERSION = 35.1
+LUAPOSIX_SITE = $(call github,luaposix,luaposix,v$(LUAPOSIX_VERSION))
 LUAPOSIX_LICENSE = MIT
-LUAPOSIX_LICENSE_FILES = COPYING
-LUAPOSIX_DEPENDENCIES = lua host-lua
-LUAPOSIX_CONF_OPT = --libdir="/usr/lib/lua" --datarootdir="/usr/share/lua"
-LUAPOSIX_AUTORECONF = YES
+LUAPOSIX_LICENSE_FILES = LICENSE
+LUAPOSIX_DEPENDENCIES = luainterpreter host-lua
 
-$(eval $(autotools-package))
+define LUAPOSIX_BUILD_CMDS
+	(cd $(@D); \
+		$(LUA_RUN) build-aux/luke \
+		CC="$(TARGET_CC)" \
+		CFLAGS="$(TARGET_CFLAGS)" \
+		LUA_INCDIR=$(STAGING_DIR)/usr/include \
+	)
+endef
+
+define LUAPOSIX_INSTALL_TARGET_CMDS
+	(cd $(@D); \
+		$(LUA_RUN) build-aux/luke install \
+		INST_LIBDIR="$(TARGET_DIR)/usr/lib/lua/$(LUAINTERPRETER_ABIVER)" \
+		INST_LUADIR="$(TARGET_DIR)/usr/share/lua/$(LUAINTERPRETER_ABIVER)" \
+	)
+endef
+
+$(eval $(generic-package))

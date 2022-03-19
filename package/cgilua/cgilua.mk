@@ -4,18 +4,10 @@
 #
 ################################################################################
 
-CGILUA_VERSION = 5.1.4
-CGILUA_SITE = http://github.com/downloads/keplerproject/cgilua
-CGILUA_DEPENDENCIES = luafilesystem
+CGILUA_VERSION = 6.0.2-0
+CGILUA_SUBDIR = cgilua
 CGILUA_LICENSE = MIT
+CGILUA_LICENSE_FILES = $(CGILUA_SUBDIR)/doc/us/license.html
+CGILUA_CPE_ID_VENDOR = keplerproject
 
-define CGILUA_INSTALL_TARGET_CMDS
-	$(MAKE) -C $(@D) install LUA_DIR="$(TARGET_DIR)/usr/share/lua"
-endef
-
-define CGILUA_UNINSTALL_TARGET_CMDS
-	rm -rf "$(TARGET_DIR)/usr/share/lua/cgilua"
-	rm -f "$(TARGET_DIR)/usr/share/lua/cgilua.lua"
-endef
-
-$(eval $(generic-package))
+$(eval $(luarocks-package))

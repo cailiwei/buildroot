@@ -7,23 +7,25 @@
 NETPLUG_VERSION = 1.2.9.2
 NETPLUG_SOURCE = netplug-$(NETPLUG_VERSION).tar.bz2
 NETPLUG_SITE = http://www.red-bean.com/~bos/netplug
+NETPLUG_LICENSE = GPL-2.0
+NETPLUG_LICENSE_FILES = COPYING
 
 define NETPLUG_BUILD_CMDS
-	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D)
+	$(TARGET_MAKE_ENV) $(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D)
 endef
 
 define NETPLUG_INSTALL_TARGET_CMDS
-	$(MAKE) DESTDIR=$(TARGET_DIR) -C $(@D) install
+	$(TARGET_MAKE_ENV) $(MAKE) DESTDIR=$(TARGET_DIR) -C $(@D) install
 endef
 
-define NETPLUG_UNINSTALL_TARGET_CMDS
-	rm -f $(TARGET_DIR)/sbin/netplugd
-	rm -rf $(TARGET_DIR)/etc/netplug*
-	rm -f $(TARGET_DIR)/etc/init.d/S*netplug
+define NETPLUG_INSTALL_INIT_SYSV
+	$(INSTALL) -m 0755 -D package/netplug/S29netplug \
+		$(TARGET_DIR)/etc/init.d/S29netplug
 endef
 
-define NETPLUG_CLEAN_CMDS
-	-$(MAKE) -C $(@D) clean
+define NETPLUG_INSTALL_INIT_SYSTEMD
+	$(INSTALL) -D -m 644 package/netplug/netplug.service \
+		$(TARGET_DIR)/usr/lib/systemd/system/netplug.service
 endef
 
 $(eval $(generic-package))

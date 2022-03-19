@@ -1,56 +1,57 @@
 comment "Binutils Options"
 
+config BR2_PACKAGE_HOST_BINUTILS_SUPPORTS_CFI
+	bool
+	default y
+	depends on !BR2_microblaze
+
 choice
 	prompt "Binutils Version"
-	depends on !BR2_arc
-	default BR2_BINUTILS_VERSION_2_21 if (BR2_mips || BR2_mipsel || BR2_sh)
-	default BR2_BINUTILS_VERSION_2_21_1
+	default BR2_BINUTILS_VERSION_2_36_X if !BR2_arc && !BR2_csky
+	default BR2_BINUTILS_VERSION_ARC if BR2_arc
 	help
 	  Select the version of binutils you wish to use.
 
-	config BR2_BINUTILS_VERSION_2_18_AVR32_1_0_1
-	       depends on BR2_avr32
-	       bool "binutils 2.18-avr32-1.0.1"
+config BR2_BINUTILS_VERSION_2_32_X
+	bool "binutils 2.32"
+	depends on !BR2_csky
 
-	config BR2_BINUTILS_VERSION_2_20_1
-		depends on !BR2_avr32
-		depends on !BR2_ARM_EABIHF
-		bool "binutils 2.20.1"
+config BR2_BINUTILS_VERSION_2_35_X
+	bool "binutils 2.35.2"
+	depends on !BR2_csky
+	# https://github.com/uclinux-dev/elf2flt/pull/16
+	# https://github.com/uclinux-dev/elf2flt/issues/12
+	depends on !BR2_BINFMT_FLAT
 
-	config BR2_BINUTILS_VERSION_2_21
-		depends on !BR2_avr32
-		depends on !BR2_ARM_EABIHF
-		bool "binutils 2.21"
+config BR2_BINUTILS_VERSION_2_36_X
+	bool "binutils 2.36.1"
+	depends on !BR2_csky
+	# https://github.com/uclinux-dev/elf2flt/pull/16
+	# https://github.com/uclinux-dev/elf2flt/issues/12
+	depends on !BR2_BINFMT_FLAT
 
-	config BR2_BINUTILS_VERSION_2_21_1
-		depends on !BR2_avr32
-		depends on !BR2_ARM_EABIHF
-		bool "binutils 2.21.1"
+config BR2_BINUTILS_VERSION_2_37_X
+	bool "binutils 2.37"
+	# https://github.com/uclinux-dev/elf2flt/pull/16
+	# https://github.com/uclinux-dev/elf2flt/issues/12
+	depends on !BR2_BINFMT_FLAT
 
-	config BR2_BINUTILS_VERSION_2_22
-		depends on !BR2_avr32
-		bool "binutils 2.22"
-
-	config BR2_BINUTILS_VERSION_2_23_1
-		depends on !BR2_avr32
-		bool "binutils 2.23.1"
-
-	config BR2_BINUTILS_VERSION_2_23_2
-		depends on !BR2_avr32
-		bool "binutils 2.23.2"
+config BR2_BINUTILS_VERSION_ARC
+	bool "binutils arc (2.34.50)"
+	depends on BR2_arc
 
 endchoice
 
 config BR2_BINUTILS_VERSION
 	string
-	default "2.18-avr32-1.0.1" if BR2_BINUTILS_VERSION_2_18_AVR32_1_0_1
-	default "2.23.2-arc"	if BR2_arc
-	default "2.20.1"	if BR2_BINUTILS_VERSION_2_20_1
-	default "2.21"		if BR2_BINUTILS_VERSION_2_21
-	default "2.21.1"	if BR2_BINUTILS_VERSION_2_21_1
-	default "2.22"		if BR2_BINUTILS_VERSION_2_22
-	default "2.23.1"	if BR2_BINUTILS_VERSION_2_23_1
-	default "2.23.2"	if BR2_BINUTILS_VERSION_2_23_2
+	default "arc-2020.09-release"	if BR2_BINUTILS_VERSION_ARC
+	default "2.32"		if BR2_BINUTILS_VERSION_2_32_X
+	default "2.35.2"	if BR2_BINUTILS_VERSION_2_35_X
+	default "2.36.1"	if BR2_BINUTILS_VERSION_2_36_X
+	default "2.37"		if BR2_BINUTILS_VERSION_2_37_X
+
+config BR2_BINUTILS_ENABLE_LTO
+	bool
 
 config BR2_BINUTILS_EXTRA_CONFIG_OPTIONS
 	string "Additional binutils options"
